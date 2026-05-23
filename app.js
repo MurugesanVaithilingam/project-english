@@ -366,6 +366,13 @@ function setCallStatus(newStatus) {
         // Show visualizer immediately
         DOM.waveformPanel.classList.remove('hidden');
         setWaveformLabel("Call connected. Press Microphone to talk!");
+        
+        // Auto-trigger microphone listening after call connection beep
+        setTimeout(() => {
+            if (state.callStatus === 'connected') {
+                startListening();
+            }
+        }, 800);
     }
 }
 
