@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaniLink | Tamil-English Call Translator</title>
+    <meta name="description" content="A real-time speech translation call interface. Translate spoken Tamil to English audio replies and vice-versa, completely free.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-bg-container">
+        <!-- Abstract gradient shapes in background -->
+        <div class="gradient-sphere blob-1"></div>
+        <div class="gradient-sphere blob-2"></div>
+        <div class="gradient-sphere blob-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar: Info & Quick Phrases -->
+        <aside class="sidebar-panel">
+            <header class="logo-area">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6 6-6"/><path d="m4 14 6-6 8 8"/></svg>
+                </div>
+                <div>
+                    <h1 id="app-title">VaniLink</h1>
+                    <p class="tagline">Speech-to-Speech Call Translator</p>
+                </div>
+            </header>
+
+            <div class="sidebar-scrollable">
+                <!-- Translation Modes Selector -->
+                <section class="section-card mode-selector">
+                    <h2>Translation Settings</h2>
+                    <div class="mode-buttons">
+                        <button id="btn-mode-ta-en" class="mode-btn active" title="Speak Tamil, hear English translation">
+                            <span class="flag">🇮🇳</span>
+                            <span class="label">Tamil → English</span>
+                        </button>
+                        <button id="btn-mode-en-ta" class="mode-btn" title="Speak English, hear Tamil translation">
+                            <span class="flag">🇬🇧</span>
+                            <span class="label">English → Tamil</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Quick Phrases Section -->
+                <section class="section-card quick-phrases-card">
+                    <h2>Quick Voice Replies</h2>
+                    <p class="section-desc">Tap a phrase to speak it instantly in the translated language.</p>
+                    
+                    <div class="phrases-tabs">
+                        <button id="tab-tamil-phrases" class="tab-btn active">Tamil Phrases</button>
+                        <button id="tab-english-phrases" class="tab-btn">English Phrases</button>
+                    </div>
+
+                    <div class="phrases-list" id="tamil-phrases-list">
+                        <button class="phrase-pill" data-text="வணக்கம், நான் பேசுவது கேட்கிறதா?">வணக்கம் (Hello, can you hear me?)</button>
+                        <button class="phrase-pill" data-text="மன்னிக்கவும், எனக்கு புரியவில்லை.">மன்னிக்கவும் (Sorry, I don't understand)</button>
+                        <button class="phrase-pill" data-text="தயவுசெய்து மீண்டும் கூற முடியுமா?">மீண்டும் கூற முடியுமா? (Can you repeat please?)</button>
+                        <button class="phrase-pill" data-text="நான் நன்றாக இருக்கிறேன், நன்றி.">நன்றாக இருக்கிறேன் (I am doing well, thank you)</button>
+                        <button class="phrase-pill" data-text="உங்களை சந்தித்ததில் மகிழ்ச்சி.">மகிழ்ச்சி (Nice to meet you)</button>
+                        <button class="phrase-pill" data-text="இந்த மொழிபெயர்ப்பு மிகவும் நன்றாக இருக்கிறது.">மொழிபெயர்ப்பு (This translation is great)</button>
+                        <button class="phrase-pill" data-text="தயவுசெய்து ஒரு நிமிடம் காத்திருக்கவும்.">ஒரு நிமிடம் காத்திருக்கவும் (Please wait a minute)</button>
+                        <button class="phrase-pill" data-text="உதவிக்கு மிக்க நன்றி!">நன்றி (Thank you very much for help!)</button>
+                    </div>
+
+                    <div class="phrases-list hidden" id="english-phrases-list">
+                        <button class="phrase-pill" data-text="Hello, how can I help you today?">Hello (வணக்கம், நான் உங்களுக்கு எவ்வாறு உதவலாம்?)</button>
+                        <button class="phrase-pill" data-text="Please hold on for a moment.">Please hold on (தயவுசெய்து ஒரு நிமிடம் காத்திருங்கள்)</button>
+                        <button class="phrase-pill" data-text="Could you please speak a bit slower?">Speak slower (கொஞ்சம் மெதுவாக பேச முடியுமா?)</button>
+                        <button class="phrase-pill" data-text="I can hear you clearly now.">I hear you clearly (இப்போது எனக்கு தெளிவாக கேட்கிறது)</button>
+                        <button class="phrase-pill" data-text="That sounds perfect, thank you.">Sounds perfect (அது சரியாக இருக்கும், நன்றி)</button>
+                        <button class="phrase-pill" data-text="Where are you located?">Where are you? (நீங்கள் எங்கே இருக்கிறீர்கள்?)</button>
+                        <button class="phrase-pill" data-text="Yes, that is correct.">Yes, correct (ஆம், அது சரிதான்)</button>
+                        <button class="phrase-pill" data-text="Let me translate that for you.">Let me translate (நான் அதை மொழிபெயர்க்கிறேன்)</button>
+                    </div>
+                </section>
+
+                <!-- Status Panel -->
+                <section class="section-card status-panel">
+                    <h2>Connection Status</h2>
+                    <div class="status-grid">
+                        <div class="status-indicator">
+                            <span class="status-dot green" id="status-engine-dot"></span>
+                            <span class="status-lbl">Voice Recognition: <strong id="status-engine">Ready</strong></span>
+                        </div>
+                        <div class="status-indicator">
+                            <span class="status-dot green" id="status-tts-dot"></span>
+                            <span class="status-lbl">Speech Synthesis: <strong id="status-tts">Active</strong></span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-workspace">
+            <!-- Header bar with call details / action toggles -->
+            <header class="workspace-header">
+                <div class="call-identity">
+                    <div class="avatar-ring-container">
+                        <div class="avatar-ring animate-pulse"></div>
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232c1b4d'/><circle cx='50' cy='35' r='20' fill='%236c5ce7'/><path d='M20,80 Q50,50 80,80 Z' fill='%236c5ce7'/></svg>" alt="Caller Avatar" class="caller-avatar">
+                    </div>
+                    <div>
+                        <div class="caller-meta">
+                            <span class="caller-name">Voice Call Session</span>
+                            <span class="badge badge-live">SIMULATED LIVE</span>
+                        </div>
+                        <p class="call-duration" id="call-timer">00:00</p>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button class="top-action-btn" id="btn-settings-toggle" title="Settings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                    <button class="top-action-btn" id="btn-volume-toggle" title="Mute Speech Synthesis Output">
+                        <svg id="volume-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Display Area: Waveform Visualization + Dialogue Logs -->
+            <div class="display-container">
+                <!-- Overlay Dial Screen before call starts -->
+                <div class="call-overlay-screen" id="call-overlay">
+                    <div class="pulsing-circles">
+                        <div class="circle c-1"></div>
+                        <div class="circle c-2"></div>
+                        <div class="circle c-3"></div>
+                        <div class="avatar-large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </div>
+                    </div>
+                    <div class="call-overlay-meta">
+                        <h2>Tamil-English Direct Line</h2>
+                        <p>Begin a free real-time speech translation call. Spoken sentences will be transcribed, translated, and read aloud automatically.</p>
+                    </div>
+                    <button class="btn btn-primary btn-call-start" id="btn-initiate-call">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>Start Voice Translation Call</span>
+                    </button>
+                </div>
+
+                <!-- Call Ringing state screen -->
+                <div class="call-overlay-screen hidden" id="call-ringing">
+                    <div class="pulsing-circles ringing">
+                        <div class="circle c-1"></div>
+                        <div class="circle c-2"></div>
+                        <div class="circle c-3"></div>
+                        <div class="avatar-large ringing">
+                            <span class="flag-big" id="ringing-flag">🇮🇳</span>
+                        </div>
+                    </div>
+                    <div class="call-overlay-meta">
+                        <h2 id="ringing-title">Connecting Call...</h2>
+                        <p id="ringing-subtitle">Setting up secure real-time speech recognition channels.</p>
+                    </div>
+                    <button class="btn btn-danger btn-call-end" id="btn-cancel-ring">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.6 5.6 1.4-1.4a2.82 2.82 0 0 1 4 0l4 4a2.82 2.82 0 0 1 0 4l-1.4 1.4"/><path d="M22 22 2 2"/><path d="M8.2 13.8 4 18a2.82 2.82 0 0 0 0 4l4 4a2.82 2.82 0 0 0 4 0l4.2-4.2"/></svg>
+                        <span>Cancel Dialing</span>
+                    </button>
+                </div>
+
+                <!-- Transcript Scroll Container -->
+                <div class="transcript-scroller" id="transcript-container">
+                    <!-- Dialogue nodes will be generated dynamically here -->
+                    <div class="empty-conversation" id="conversation-empty-state">
+                        <div class="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <h3>No Conversation Yet</h3>
+                        <p>Click "Speak Now" below or select a phrase to begin communicating.</p>
+                    </div>
+                </div>
+
+                <!-- Active wave display inside live call -->
+                <div class="waveform-banner hidden" id="waveform-panel">
+                    <div class="waveform-label" id="waveform-label">Waiting for speech...</div>
+                    <div class="wave-container">
+                        <div class="wave-bar wb-1"></div>
+                        <div class="wave-bar wb-2"></div>
+                        <div class="wave-bar wb-3"></div>
+                        <div class="wave-bar wb-4"></div>
+                        <div class="wave-bar wb-5"></div>
+                        <div class="wave-bar wb-6"></div>
+                        <div class="wave-bar wb-7"></div>
+                        <div class="wave-bar wb-8"></div>
+                        <div class="wave-bar wb-9"></div>
+                        <div class="wave-bar wb-10"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call HUD controls / Input fallback -->
+            <footer class="workspace-footer">
+                <div class="voice-controls-row">
+                    <button class="control-btn btn-sec" id="btn-toggle-mic-mode" title="Toggle Manual Text Input Box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M12 2v9"/><path d="m8 5 4-3 4 3"/></svg>
+                        <span>Text Input Fallback</span>
+                    </button>
+
+                    <!-- Large glowing Mic Trigger -->
+                    <div class="mic-trigger-container">
+                        <button class="mic-main-btn" id="btn-mic-trigger" disabled>
+                            <svg class="icon-mic" id="mic-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                        </button>
+                        <span class="mic-status-bubble" id="mic-hint">Start Call First</span>
+                    </div>
+
+                    <button class="control-btn btn-danger-hud" id="btn-disconnect-call" disabled title="End Translation Call">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.6 5.6 1.4-1.4a2.82 2.82 0 0 1 4 0l4 4a2.82 2.82 0 0 1 0 4l-1.4 1.4"/><path d="M22 22 2 2"/><path d="M8.2 13.8 4 18a2.82 2.82 0 0 0 0 4l4 4a2.82 2.82 0 0 0 4 0l4.2-4.2"/></svg>
+                        <span>Disconnect Call</span>
+                    </button>
+                </div>
+
+                <!-- Hidden/Slide-up Text Input Fallback Drawer -->
+                <div class="text-input-drawer hidden" id="manual-text-panel">
+                    <form id="fallback-input-form" class="input-form">
+                        <input type="text" id="fallback-input-field" placeholder="Type text in Tamil to translate to English..." autocomplete="off">
+                        <button type="submit" class="btn btn-primary btn-send">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Translate</span>
+                        </button>
+                    </form>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Settings Dialog Modal -->
+    <div class="modal-overlay hidden" id="settings-modal">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Translation & Speech Settings</h2>
+                <button class="modal-close" id="btn-close-settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </header>
+            <div class="modal-body">
+                <!-- Text-to-Speech Output Voice Selection -->
+                <div class="setting-group">
+                    <label for="select-english-voice">English Voice (Output for Tamil Spoken)</label>
+                    <select id="select-english-voice" class="setting-control">
+                        <option value="default">System Default Voice</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="select-tamil-voice">Tamil Voice (Output for English Spoken)</label>
+                    <select id="select-tamil-voice" class="setting-control">
+                        <option value="default">System Default Voice</option>
+                    </select>
+                </div>
+
+                <!-- Speech Rate Speed -->
+                <div class="setting-group">
+                    <label for="slider-speech-rate">Voice Playback Speed (<span id="lbl-speech-rate">1.0x</span>)</label>
+                    <input type="range" id="slider-speech-rate" min="0.5" max="2.0" step="0.1" value="1.0" class="setting-slider">
+                </div>
+
+                <!-- Speech Pitch Slider -->
+                <div class="setting-group">
+                    <label for="slider-speech-pitch">Voice Pitch (<span id="lbl-speech-pitch">1.0</span>)</label>
+                    <input type="range" id="slider-speech-pitch" min="0.5" max="1.5" step="0.1" value="1.0" class="setting-slider">
+                </div>
+
+                <!-- Autoplay TTS Switch -->
+                <div class="setting-group checkbox-group">
+                    <input type="checkbox" id="chk-auto-speak" checked>
+                    <label for="chk-auto-speak">Automatically read out translations immediately</label>
+                </div>
+
+                <!-- Continuous Listening Switch -->
+                <div class="setting-group checkbox-group">
+                    <input type="checkbox" id="chk-continuous-mic">
+                    <label for="chk-continuous-mic">Continuous Speech Recognition (don't stop after one sentence)</label>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="btn btn-primary" id="btn-save-settings">Done</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="app.js"></script>
+</body>
+</html>
