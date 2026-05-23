@@ -9,7 +9,7 @@ const state = {
     mode: 'ta-en', // ta-en (Tamil to English), en-ta (English to Tamil)
     isMuted: false, // Mutes speech synthesis output
     isListening: false,
-    continuousRecognition: false,
+    continuousRecognition: true,
     autoSpeak: true,
     speechRate: 1.0,
     speechPitch: 1.0,
