@@ -444,17 +444,12 @@ function speakTranslation(text, lang) {
     utterance.onend = () => {
         DOM.waveContainer.classList.remove('speaking');
         DOM.statusTts.innerText = "Active";
-        
-        if (state.isListening) {
-            setWaveformLabel("Listening for voice...");
-        } else {
-            setWaveformLabel("Idle");
-        }
         state.activeUtterance = null;
         
-        // Proactively resume listening if continuous mode is on
-        if (state.continuousRecognition && state.isListening) {
-            startListening();
+        // Always restart mic after TTS finishes if call is still connected
+        if (state.callStatus === 'connected') {
+            state.isListening = true;
+            setTimeout(() => startListening(), 200);
         }
     };
 
@@ -540,29 +535,28 @@ if (recognitionInstance) {
 
     recognitionInstance.onerror = (event) => {
         console.warn("Speech Recognition error: ", event.error);
-        if (event.error === 'no-speech') {
-            setWaveformLabel("Silence detected. Try again.");
-        } else if (event.error === 'not-allowed') {
-            setWaveformLabel("Permission denied. Set up Mic or type text.");
+        
+        if (event.error === 'not-allowed') {
+            // Hard stop — mic permission denied
+            setWaveformLabel("Microphone Permission Denied. Please allow mic access.");
             DOM.statusEngine.innerText = "Blocked";
             DOM.statusEngineDot.className = "status-dot red";
-        } else {
-            setWaveformLabel("Mic Error: " + event.error);
+            state.isListening = false;
+            DOM.btnMicTrigger.classList.remove('listening');
+            DOM.waveContainer.classList.remove('speaking');
+            return;
         }
         
-        DOM.btnMicTrigger.classList.remove('listening');
-        DOM.waveContainer.classList.remove('speaking');
-        state.isListening = false;
-        DOM.statusEngine.innerText = "Ready";
-        DOM.statusEngineDot.className = "status-dot green";
+        // For no-speech or other transient errors, just silently restart
+        if (state.callStatus === 'connected' && !synth.speaking) {
+            setTimeout(() => startListening(), 300);
+        }
     };
 
     recognitionInstance.onend = () => {
-        // Only restart if not speaking and continuous listening is enabled
-        if (state.continuousRecognition && state.isListening && !synth.speaking) {
-            startListening();
-        } else if (!state.continuousRecognition) {
-            stopListening();
+        // Auto-restart mic if call is connected and TTS is not currently playing
+        if (state.callStatus === 'connected' && !synth.speaking) {
+            setTimeout(() => startListening(), 200);
         }
     };
 }
