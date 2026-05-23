@@ -321,7 +321,7 @@ function setCallStatus(newStatus) {
         DOM.waveformPanel.classList.add('hidden');
         stopTimer();
         stopRingtoneSynth();
-        stopListening();
+        stopListening(true);
     } 
     else if (newStatus === 'ringing') {
         DOM.callOverlay.classList.add('hidden');
@@ -498,15 +498,19 @@ function startListening() {
     }
 }
 
-function stopListening() {
+function stopListening(force = false) {
     if (!recognitionInstance) return;
-    recognitionInstance.stop();
-    state.isListening = false;
-    DOM.btnMicTrigger.classList.remove('listening');
-    DOM.waveContainer.classList.remove('speaking');
-    setWaveformLabel("Mic Off");
-    DOM.statusEngine.innerText = "Ready";
-    DOM.statusEngineDot.className = "status-dot green";
+    try { recognitionInstance.stop(); } catch(e) {}
+    
+    // Only fully reset state when explicitly forced (e.g. call ended)
+    if (force) {
+        state.isListening = false;
+        DOM.btnMicTrigger.classList.remove('listening');
+        DOM.waveContainer.classList.remove('speaking');
+        setWaveformLabel("Mic Off");
+        DOM.statusEngine.innerText = "Ready";
+        DOM.statusEngineDot.className = "status-dot green";
+    }
 }
 
 // Bind Speech Recognition Events
@@ -672,17 +676,26 @@ DOM.btnDisconnectCall.addEventListener('click', () => {
     setCallStatus('idle');
 });
 
-// Microphone toggle
+// Microphone button — during a call it restarts mic (never disconnects loop)
 DOM.btnMicTrigger.addEventListener('click', () => {
     playAudioCue('click');
     
     if (!recognitionInstance) {
-        alert("Speech Recognition API is not supported in this browser. Please use the Text Input Fallback.");
+        alert("Speech Recognition is not supported in this browser. Please use the Text Input Fallback.");
         return;
     }
     
+    // During an active call: just restart mic (never kill the loop)
+    if (state.callStatus === 'connected') {
+        if (synth && synth.speaking) synth.cancel(); // stop TTS if speaking
+        try { recognitionInstance.stop(); } catch(e) {}
+        setTimeout(() => startListening(), 200);
+        return;
+    }
+    
+    // Outside a call: normal toggle
     if (state.isListening) {
-        stopListening();
+        stopListening(true);
     } else {
         startListening();
     }
