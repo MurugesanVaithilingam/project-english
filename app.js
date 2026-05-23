@@ -408,6 +408,11 @@ function speakTranslation(text, lang) {
     // Stop ongoing speech
     synth.cancel();
     
+    // STOP the mic from listening to prevent the app from hearing itself (Echo loop)
+    if (recognitionInstance) {
+        try { recognitionInstance.abort(); } catch(e) {}
+    }
+    
     const utterance = new SpeechSynthesisUtterance(text);
     state.activeUtterance = utterance;
     
@@ -552,14 +557,14 @@ if (recognitionInstance) {
         }
         
         // For no-speech or other transient errors, just silently restart
-        if (state.callStatus === 'connected' && !synth.speaking) {
+        if (state.callStatus === 'connected' && !synth.speaking && !state.activeUtterance) {
             setTimeout(() => startListening(), 300);
         }
     };
 
     recognitionInstance.onend = () => {
         // Auto-restart mic if call is connected and TTS is not currently playing
-        if (state.callStatus === 'connected' && !synth.speaking) {
+        if (state.callStatus === 'connected' && !synth.speaking && !state.activeUtterance) {
             setTimeout(() => startListening(), 200);
         }
     };
