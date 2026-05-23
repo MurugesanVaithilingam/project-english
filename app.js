@@ -20,7 +20,9 @@ const state = {
     audioContext: null,
     ringOscillators: [],
     ringGainNode: null,
-    activeUtterance: null
+    activeUtterance: null,
+    speechBuffer: '',
+    speechTimeout: null
 };
 
 // --- DOM Reference Selectors ---
@@ -510,6 +512,8 @@ function stopListening(force = false) {
     // Only fully reset state when explicitly forced (e.g. call ended)
     if (force) {
         state.isListening = false;
+        clearTimeout(state.speechTimeout);
+        state.speechBuffer = '';
         DOM.btnMicTrigger.classList.remove('listening');
         DOM.waveContainer.classList.remove('speaking');
         setWaveformLabel("Mic Off");
@@ -532,13 +536,25 @@ if (recognitionInstance) {
             }
         }
         
-        // Show live spoken words on the waveform banner
-        if (interimTranscript.trim()) {
-            setWaveformLabel("Hearing live: " + interimTranscript);
-        }
+        // Clear the processing timeout whenever speech is detected
+        clearTimeout(state.speechTimeout);
         
         if (finalTranscript.trim()) {
-            processSpeechPipeline(finalTranscript);
+            state.speechBuffer += (state.speechBuffer ? ' ' : '') + finalTranscript.trim();
+        }
+        
+        let displayLive = (state.speechBuffer + " " + interimTranscript).trim();
+        if (displayLive) {
+            setWaveformLabel("Hearing live: " + displayLive);
+            
+            // Start a 1.5-second countdown. If no new speech arrives, process the buffer!
+            state.speechTimeout = setTimeout(() => {
+                if (state.speechBuffer.trim()) {
+                    const textToTranslate = state.speechBuffer.trim();
+                    state.speechBuffer = ''; // Clear buffer immediately
+                    processSpeechPipeline(textToTranslate);
+                }
+            }, 1500);
         }
     };
 
