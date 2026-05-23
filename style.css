@@ -1279,48 +1279,127 @@ body {
 /* ----------------------------------------------------
    RESPONSIVE DESIGN ADAPTATIONS
 ---------------------------------------------------- */
+
+/* --- Tablet / small laptop (up to 992px) --- */
 @media (max-width: 992px) {
+    body {
+        align-items: stretch;
+    }
+
     .app-container {
         height: 100vh;
+        height: 100dvh;
         width: 100vw;
+        max-width: none;
         max-height: none;
         border-radius: 0;
         border: none;
-    }
-}
-
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
+        box-shadow: none;
     }
 
     .sidebar-panel {
+        width: 320px;
+    }
+}
+
+/* --- Mobile & small tablet (up to 768px) --- */
+@media (max-width: 768px) {
+    body {
+        align-items: stretch;
+    }
+
+    .app-container {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        width: 100vw;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Sidebar collapses to a compact horizontal strip */
+    .sidebar-panel {
         width: 100%;
         height: auto;
+        max-height: none;
         border-right: none;
         border-bottom: 1px solid var(--glass-border);
+        flex-shrink: 0;
     }
     
     .logo-area {
-        padding: 16px;
+        padding: 10px 16px;
+        gap: 10px;
+    }
+
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .logo-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    #app-title {
+        font-size: 1.2rem;
+    }
+
+    .tagline {
+        font-size: 0.7rem;
     }
     
     .sidebar-scrollable {
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
-        padding: 12px;
-        height: 100px;
-        align-items: center;
+        padding: 8px 12px;
+        gap: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .sidebar-scrollable::-webkit-scrollbar {
+        display: none;
     }
     
-    .section-card {
-        padding: 10px;
-        min-width: 250px;
-        height: 100%;
-        margin-bottom: 0;
+    /* Mode selector becomes compact horizontal buttons */
+    .section-card.mode-selector {
+        padding: 8px;
+        min-width: auto;
+        flex-shrink: 0;
     }
-    
+
+    .section-card.mode-selector h2 {
+        display: none;
+    }
+
+    .mode-buttons {
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    .mode-btn {
+        padding: 8px 12px;
+        font-size: 0.78rem;
+        white-space: nowrap;
+    }
+
+    .mode-btn .flag {
+        font-size: 1rem;
+    }
+
+    /* Quick phrases become horizontally scrollable pills */
+    .section-card.quick-phrases-card {
+        padding: 8px;
+        min-width: auto;
+        flex-shrink: 0;
+    }
+
     .section-card h2, .section-desc, .phrases-tabs {
         display: none;
     }
@@ -1331,83 +1410,504 @@ body {
         overflow-x: auto;
         overflow-y: hidden;
         gap: 6px;
+        padding-right: 0;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .phrases-list::-webkit-scrollbar {
+        display: none;
     }
     
     .phrase-pill {
         white-space: nowrap;
         width: auto;
+        min-width: max-content;
         padding: 6px 12px;
+        font-size: 0.75rem;
     }
     
     .status-panel {
         display: none;
     }
 
+    /* Main workspace fills remaining space */
     .main-workspace {
         flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .display-container {
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Workspace header compact */
+    .workspace-header {
+        padding: 10px 14px;
+        flex-shrink: 0;
+    }
+
+    .caller-name {
+        font-size: 0.9rem;
+    }
+
+    .call-duration {
+        font-size: 0.72rem;
+    }
+
+    .caller-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .avatar-ring-container {
+        width: 36px;
+        height: 36px;
+    }
+
+    .top-action-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .top-action-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Transcript area */
+    .transcript-scroller {
+        padding: 16px;
+        gap: 14px;
     }
     
     .dialogue-node {
-        max-width: 90%;
+        max-width: 92%;
     }
-}
 
-/* Extra small devices / Mobile optimizations */
-@media (max-width: 560px) {
+    /* Call overlay adjustments */
+    .call-overlay-screen {
+        padding: 24px 20px;
+    }
+
+    .pulsing-circles {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 20px;
+    }
+
+    .avatar-large {
+        width: 70px;
+        height: 70px;
+    }
+
+    .avatar-large svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .flag-big {
+        font-size: 2.2rem;
+    }
+
+    .call-overlay-meta {
+        margin-bottom: 24px;
+    }
+
+    .call-overlay-meta h2 {
+        font-size: 1.3rem;
+    }
+
+    .call-overlay-meta p {
+        font-size: 0.82rem;
+    }
+
+    .btn {
+        padding: 12px 22px;
+        font-size: 0.88rem;
+    }
+
+    /* Waveform banner compact */
+    .waveform-banner {
+        padding: 8px 14px;
+    }
+
+    .waveform-label {
+        font-size: 0.72rem;
+    }
+
+    /* Footer controls — critical for mobile */
+    .workspace-footer {
+        padding: 10px 12px;
+        gap: 10px;
+        flex-shrink: 0;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+    
+    .voice-controls-row {
+        gap: 8px;
+    }
+
+    /* Hide text labels on buttons, icon-only */
     .control-btn span {
-        display: none; /* Hide labels on mobile to prevent squishing */
+        display: none;
     }
     
     .control-btn {
-        padding: 12px;
+        padding: 10px;
         border-radius: 50%;
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
     }
     
-    .workspace-footer {
-        padding: 12px 16px;
-    }
-    
+    /* Mic button */
     .mic-main-btn {
-        width: 60px;
-        height: 60px;
+        width: 58px;
+        height: 58px;
+        flex-shrink: 0;
     }
     
     .mic-trigger-container {
-        bottom: 4px;
+        bottom: 6px;
     }
-    
-    .workspace-header {
-        padding: 12px 16px;
+
+    .mic-main-btn svg {
+        width: 24px;
+        height: 24px;
     }
-    
-    .caller-name {
-        font-size: 0.95rem;
+
+    .mic-status-bubble {
+        font-size: 0.62rem;
+        margin-top: 4px;
     }
-    
-    .badge {
-        font-size: 0.65rem;
-        padding: 2px 6px;
-    }
-    
-    .dialogue-node {
-        max-width: 95%;
-    }
-    
+
+    /* Bubble body compact */
     .bubble-body {
-        padding: 12px 16px;
+        padding: 12px 14px;
     }
-    
+
     .translated-text {
-        font-size: 0.95rem;
+        font-size: 0.92rem;
+    }
+
+    .source-text {
+        font-size: 0.78rem;
+    }
+
+    .bubble-meta {
+        font-size: 0.65rem;
+    }
+
+    .translated-text-row {
+        gap: 10px;
+    }
+
+    /* Text input drawer compact */
+    .text-input-drawer {
+        padding-top: 10px;
+    }
+
+    .input-form {
+        gap: 8px;
+    }
+
+    .input-form input {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+
+    .btn-send {
+        padding: 10px 14px !important;
+    }
+
+    .btn-send span {
+        display: none;
+    }
+
+    /* Settings modal — fit mobile screen */
+    .modal-card {
+        max-width: calc(100vw - 24px);
+        max-height: calc(100vh - 40px);
+        max-height: calc(100dvh - 40px);
+        overflow-y: auto;
+        margin: 12px;
+        border-radius: var(--radius-md);
+    }
+
+    .modal-header {
+        padding: 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1rem;
+    }
+
+    .modal-body {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .modal-footer {
+        padding: 12px 16px;
     }
 }
 
-/* Large TV Screen optimizations */
+/* --- Extra small phones (up to 400px, e.g. iPhone SE, small Androids) --- */
+@media (max-width: 400px) {
+    .logo-area {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    #app-title {
+        font-size: 1.05rem;
+    }
+
+    .tagline {
+        font-size: 0.65rem;
+    }
+
+    .sidebar-scrollable {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+
+    .mode-btn {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        gap: 6px;
+    }
+
+    .phrase-pill {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+
+    .workspace-header {
+        padding: 8px 10px;
+    }
+
+    .caller-name {
+        font-size: 0.82rem;
+    }
+
+    .badge {
+        font-size: 0.58rem;
+        padding: 1px 4px;
+    }
+
+    .top-action-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .top-action-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .workspace-footer {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        padding: 8px;
+    }
+
+    .mic-main-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .mic-main-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .mic-status-bubble {
+        font-size: 0.58rem;
+    }
+
+    .mic-trigger-container {
+        bottom: 2px;
+    }
+
+    .transcript-scroller {
+        padding: 12px 10px;
+        gap: 10px;
+    }
+
+    .dialogue-node {
+        max-width: 96%;
+    }
+
+    .bubble-body {
+        padding: 10px 12px;
+    }
+
+    .translated-text {
+        font-size: 0.85rem;
+    }
+
+    .source-text {
+        font-size: 0.72rem;
+    }
+
+    .call-overlay-meta h2 {
+        font-size: 1.1rem;
+    }
+
+    .call-overlay-meta p {
+        font-size: 0.75rem;
+    }
+
+    .pulsing-circles {
+        width: 100px;
+        height: 100px;
+    }
+
+    .avatar-large {
+        width: 60px;
+        height: 60px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 0.82rem;
+    }
+
+    .empty-conversation h3 {
+        font-size: 0.95rem;
+    }
+
+    .empty-conversation p {
+        font-size: 0.75rem;
+    }
+}
+
+/* --- Landscape mobile (short and wide) --- */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-container {
+        flex-direction: row;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    .sidebar-panel {
+        width: 260px;
+        height: 100%;
+        border-right: 1px solid var(--glass-border);
+        border-bottom: none;
+    }
+
+    .sidebar-scrollable {
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px;
+        height: auto;
+    }
+
+    .section-card h2, .section-desc, .phrases-tabs {
+        display: none;
+    }
+
+    .mode-buttons {
+        flex-direction: row;
+    }
+
+    .phrases-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-height: 80px;
+        overflow-y: auto;
+    }
+
+    .logo-area {
+        padding: 10px 12px;
+    }
+
+    .workspace-footer {
+        padding: 6px 10px;
+    }
+
+    .mic-main-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .mic-trigger-container {
+        bottom: 0;
+    }
+
+    .mic-status-bubble {
+        display: none;
+    }
+
+    .control-btn {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+    }
+
+    .control-btn span {
+        display: none;
+    }
+
+    .transcript-scroller {
+        padding: 10px;
+    }
+
+    .pulsing-circles {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 10px;
+    }
+
+    .avatar-large {
+        width: 50px;
+        height: 50px;
+    }
+
+    .call-overlay-meta h2 {
+        font-size: 1.1rem;
+    }
+
+    .call-overlay-meta p {
+        font-size: 0.7rem;
+    }
+}
+
+/* --- Large desktop (1440px+) --- */
+@media (min-width: 1440px) {
+    .app-container {
+        max-width: 1500px;
+        max-height: 950px;
+    }
+
+    .sidebar-panel {
+        width: 400px;
+    }
+}
+
+/* --- Large TV Screen (2000px+) --- */
 @media (min-width: 2000px) {
     .app-container {
         max-width: 1800px;
@@ -1415,17 +1915,101 @@ body {
         width: 90vw;
         height: 85vh;
     }
+
+    .sidebar-panel {
+        width: 450px;
+    }
     
     #app-title {
         font-size: 1.8rem;
     }
+
+    .logo-icon {
+        width: 52px;
+        height: 52px;
+    }
+
+    .logo-icon svg {
+        width: 28px;
+        height: 28px;
+    }
     
     .phrase-pill {
         font-size: 1rem;
-        padding: 10px 16px;
+        padding: 12px 18px;
+    }
+
+    .mode-btn {
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+
+    .caller-name {
+        font-size: 1.2rem;
+    }
+
+    .mic-main-btn {
+        width: 80px;
+        height: 80px;
+    }
+
+    .mic-main-btn svg {
+        width: 34px;
+        height: 34px;
     }
     
     .translated-text {
         font-size: 1.25rem;
+    }
+
+    .source-text {
+        font-size: 1rem;
+    }
+
+    .bubble-body {
+        padding: 20px 24px;
+    }
+
+    .control-btn {
+        padding: 14px 24px;
+        font-size: 0.95rem;
+    }
+
+    .workspace-header {
+        padding: 24px 30px;
+    }
+
+    .transcript-scroller {
+        padding: 36px;
+        gap: 24px;
+    }
+}
+
+/* --- Ultra-wide / 4K TV (2560px+) --- */
+@media (min-width: 2560px) {
+    .app-container {
+        max-width: 2200px;
+        max-height: 1400px;
+    }
+
+    #app-title {
+        font-size: 2.1rem;
+    }
+
+    .translated-text {
+        font-size: 1.4rem;
+    }
+
+    .source-text {
+        font-size: 1.1rem;
+    }
+
+    .caller-name {
+        font-size: 1.4rem;
+    }
+
+    .mic-main-btn {
+        width: 90px;
+        height: 90px;
     }
 }
