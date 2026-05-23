@@ -150,7 +150,7 @@ if (synth) {
 
 // --- Initialize Speech Recognition Configuration ---
 if (recognitionInstance) {
-    recognitionInstance.continuous = false;
+    recognitionInstance.continuous = state.continuousRecognition;
     recognitionInstance.interimResults = true;
     recognitionInstance.maxAlternatives = 1;
 }
