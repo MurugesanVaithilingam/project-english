@@ -1351,3 +1351,81 @@ body {
         max-width: 90%;
     }
 }
+
+/* Extra small devices / Mobile optimizations */
+@media (max-width: 560px) {
+    .control-btn span {
+        display: none; /* Hide labels on mobile to prevent squishing */
+    }
+    
+    .control-btn {
+        padding: 12px;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .workspace-footer {
+        padding: 12px 16px;
+    }
+    
+    .mic-main-btn {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .mic-trigger-container {
+        bottom: 4px;
+    }
+    
+    .workspace-header {
+        padding: 12px 16px;
+    }
+    
+    .caller-name {
+        font-size: 0.95rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .dialogue-node {
+        max-width: 95%;
+    }
+    
+    .bubble-body {
+        padding: 12px 16px;
+    }
+    
+    .translated-text {
+        font-size: 0.95rem;
+    }
+}
+
+/* Large TV Screen optimizations */
+@media (min-width: 2000px) {
+    .app-container {
+        max-width: 1800px;
+        max-height: 1100px;
+        width: 90vw;
+        height: 85vh;
+    }
+    
+    #app-title {
+        font-size: 1.8rem;
+    }
+    
+    .phrase-pill {
+        font-size: 1rem;
+        padding: 10px 16px;
+    }
+    
+    .translated-text {
+        font-size: 1.25rem;
+    }
+}
