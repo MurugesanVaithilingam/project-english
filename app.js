@@ -547,14 +547,14 @@ if (recognitionInstance) {
         if (displayLive) {
             setWaveformLabel("Hearing live: " + displayLive);
             
-            // Start a 1.5-second countdown. If no new speech arrives, process the buffer!
+            // Start a 0.75-second countdown. If no new speech arrives, process the buffer!
             state.speechTimeout = setTimeout(() => {
                 if (state.speechBuffer.trim()) {
                     const textToTranslate = state.speechBuffer.trim();
                     state.speechBuffer = ''; // Clear buffer immediately
                     processSpeechPipeline(textToTranslate);
                 }
-            }, 1500);
+            }, 750);
         }
     };
 
