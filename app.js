@@ -761,8 +761,16 @@ async function appendDialogueBubble(grammarResult, translatedText, senderClass) 
         `;
     }
     
+    // Determine the English version of the text to feed to the suggestion engine
+    let englishTextForSuggestions = translatedText;
+    if (state.sourceLang.startsWith('en')) {
+        englishTextForSuggestions = grammarResult.hasMistake ? grammarResult.correctedText : grammarResult.originalText;
+    } else if (state.targetLang.startsWith('en')) {
+        englishTextForSuggestions = translatedText;
+    }
+    
     // Suggested Answers logic (client-side intent matching or Gemini API)
-    const suggestionData = await generateSuggestedReplies(translatedText);
+    const suggestionData = await generateSuggestedReplies(englishTextForSuggestions);
     const suggestions = suggestionData.replies || [];
     const isAi = suggestionData.isAi || false;
     
@@ -806,14 +814,57 @@ async function appendDialogueBubble(grammarResult, translatedText, senderClass) 
     // Listen to reply chips
     const chips = node.querySelectorAll('.reply-chip');
     chips.forEach(chip => {
-        chip.addEventListener('click', (e) => {
+        chip.addEventListener('click', async (e) => {
             e.stopPropagation();
             playAudioCue('click');
-            // If user clicked a reply, we set it as if they spoke it in their source lang
-            // The replies are generated in English, so we treat it as textInput
-            // Actually, we must process it directly
+            
             state.isProcessing = true;
-            processSpeechPipeline(chip.innerText);
+            const englishReply = chip.innerText;
+            
+            // Speak it aloud in English immediately
+            speakTranslation(englishReply, 'en');
+            
+            // Translate the English reply to the user's current native language for display
+            const isUserEnglish = state.sourceLang.startsWith('en');
+            const userLang = state.sourceLang.split('-')[0];
+            
+            let translatedResult = englishReply;
+            if (!isUserEnglish) {
+                translatedResult = await fetchTranslation(englishReply, 'en', userLang);
+            }
+            
+            // Hide empty state
+            DOM.conversationEmptyState.classList.add('hidden');
+            
+            // Create a custom bubble for the chip reply
+            const replyNode = document.createElement('article');
+            replyNode.className = `dialogue-node self`;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // Get language names
+            const nativeLangName = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+            const foreignLangName = DOM.selectTargetLang.options[DOM.selectTargetLang.selectedIndex].text;
+            
+            replyNode.innerHTML = `
+                <div class="bubble-meta">
+                    <span class="bubble-lang-tag">AI Reply Sent</span>
+                    <span class="bubble-time">${timeStr}</span>
+                </div>
+                <div class="bubble-body">
+                    <div class="translated-text-row">
+                        <p class="translated-text">${isUserEnglish ? englishReply : translatedResult}</p>
+                    </div>
+                    <div class="translated-divider"></div>
+                    <div class="source-text">Original (English): <span>${englishReply}</span></div>
+                </div>
+            `;
+            
+            DOM.transcriptContainer.appendChild(replyNode);
+            DOM.transcriptContainer.scrollTop = DOM.transcriptContainer.scrollHeight;
+            
+            state.isProcessing = false;
         });
     });
     
