@@ -305,6 +305,16 @@
                     <input type="checkbox" id="chk-continuous-mic" checked>
                     <label for="chk-continuous-mic">Continuous Speech Recognition (don't stop after one sentence)</label>
                 </div>
+
+                <!-- AI Suggested Replies (Gemini API) -->
+                <div class="setting-group ai-settings-group">
+                    <label for="input-gemini-key">
+                        AI Suggested Replies 
+                        <span class="badge ai-badge">FREE AI</span>
+                    </label>
+                    <p class="setting-desc">Paste a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google Gemini API Key</a> to generate smart conversational replies for everything the other person says. Without a key, basic keyword matching is used.</p>
+                    <input type="password" id="input-gemini-key" class="setting-control" placeholder="AIzaSy... (Saved locally)">
+                </div>
             </div>
             <footer class="modal-footer">
                 <button class="btn btn-primary" id="btn-save-settings">Done</button>
@@ -313,6 +323,6 @@
     </div>
 
     <!-- Script -->
-    <script src="app.js?v=1.0.7"></script>
+    <script src="app.js?v=1.0.8"></script>
 </body>
 </html>

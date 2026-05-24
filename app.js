@@ -22,7 +22,8 @@ const state = {
     ringGainNode: null,
     activeUtterance: null,
     speechBuffer: '',
-    speechTimeout: null
+    speechTimeout: null,
+    geminiApiKey: localStorage.getItem('geminiApiKey') || ''
 };
 
 // --- DOM Reference Selectors ---
@@ -80,8 +81,12 @@ const DOM = {
     lblSpeechPitch: document.getElementById('lbl-speech-pitch'),
     chkAutoSpeak: document.getElementById('chk-auto-speak'),
     chkContinuousMic: document.getElementById('chk-continuous-mic'),
-    micHint: document.getElementById('mic-hint')
+    micHint: document.getElementById('mic-hint'),
+    inputGeminiKey: document.getElementById('input-gemini-key')
 };
+
+// Initialize settings fields
+if (state.geminiApiKey) DOM.inputGeminiKey.value = state.geminiApiKey;
 
 // --- Web Speech API Availability Checks ---
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -696,7 +701,7 @@ async function processSpeechPipeline(textInput) {
         const translatedResult = await fetchTranslation(finalSourceText, fromLang, toLang);
         
         // Output dialogue node HTML
-        appendDialogueBubble(grammarResult, translatedResult, sourceNodeClass);
+        await appendDialogueBubble(grammarResult, translatedResult, sourceNodeClass);
         
         DOM.statusEngine.innerText = "Ready";
         if (state.isListening) {
@@ -724,7 +729,7 @@ async function processSpeechPipeline(textInput) {
 }
 
 // Render dynamic dialog bubbles in the UI
-function appendDialogueBubble(grammarResult, translatedText, senderClass) {
+async function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     // Hide empty transcript state
     DOM.conversationEmptyState.classList.add('hidden');
     
@@ -756,14 +761,17 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
         `;
     }
     
-    // Suggested Answers logic (client-side intent matching)
-    const suggestions = generateSuggestedReplies(translatedText);
+    // Suggested Answers logic (client-side intent matching or Gemini API)
+    const suggestionData = await generateSuggestedReplies(translatedText);
+    const suggestions = suggestionData.replies || [];
+    const isAi = suggestionData.isAi || false;
+    
     let suggestionsHtml = '';
     
     if (suggestions.length > 0) {
         suggestionsHtml = `
             <div class="suggested-replies-container">
-                ${suggestions.map(reply => `<button class="reply-chip">${reply}</button>`).join('')}
+                ${suggestions.map(reply => `<button class="reply-chip ${isAi ? 'ai-chip' : ''}">${reply}</button>`).join('')}
             </div>
         `;
     }
@@ -1038,11 +1046,40 @@ document.body.addEventListener('click', () => {
 }, { once: true });
 
 // --- Suggested Replies Engine ---
-function generateSuggestedReplies(text) {
+async function generateSuggestedReplies(text) {
+    // If Gemini API Key exists, use it for dynamic smart replies
+    if (state.geminiApiKey) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.geminiApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `The other person in a phone call just said: "${text}". Generate 3 very short, natural, conversational reply options in English. Return ONLY a valid JSON array of 3 strings. Example: ["Hello!", "How are you?", "Good morning."]` }]
+                    }],
+                    generationConfig: { temperature: 0.7, topK: 40, topP: 0.95 }
+                })
+            });
+            const data = await response.json();
+            if (data.candidates && data.candidates.length > 0) {
+                let aiText = data.candidates[0].content.parts[0].text.trim();
+                // Strip markdown formatting if any
+                aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                const replies = JSON.parse(aiText);
+                if (Array.isArray(replies) && replies.length > 0) {
+                    return { replies: replies.slice(0, 3), isAi: true };
+                }
+            }
+        } catch (e) {
+            console.error("Gemini API suggestion error: ", e);
+            // Fallback to basic intents below if API fails
+        }
+    }
+
     const lowerText = text.toLowerCase();
     let suggestions = [];
 
-    // Simple Intent Matching
+    // Simple Intent Matching (Fallback)
     if (lowerText.match(/\b(hi|hello|hey|greetings|how are you|how do you do)\b/)) {
         suggestions = ["Hello! I'm doing well.", "Hi, how can I help?", "I'm good, thank you!"];
     } else if (lowerText.match(/\b(thank you|thanks|appreciate it)\b/)) {
@@ -1057,7 +1094,7 @@ function generateSuggestedReplies(text) {
         suggestions = ["I'm calling via Kutty Brw.", "My name is on the screen.", "I'm your contact."];
     }
 
-    return suggestions;
+    return { replies: suggestions, isAi: false };
 }
 
 // Mute Synthesized Voices
@@ -1088,6 +1125,16 @@ DOM.btnCloseSettings.addEventListener('click', () => {
 
 DOM.btnSaveSettings.addEventListener('click', () => {
     playAudioCue('click');
+    
+    // Save Gemini API Key
+    const key = DOM.inputGeminiKey.value.trim();
+    state.geminiApiKey = key;
+    if (key) {
+        localStorage.setItem('geminiApiKey', key);
+    } else {
+        localStorage.removeItem('geminiApiKey');
+    }
+    
     DOM.settingsModal.classList.add('hidden');
 });
 
