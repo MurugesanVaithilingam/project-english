@@ -146,44 +146,56 @@ if (recognitionInstance) {
 
 // --- Sound Effects Generator (Web Audio API) ---
 function initAudioContext() {
-    if (!state.audioContext) {
-        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (state.audioContext.state === 'suspended') {
-        state.audioContext.resume();
+    try {
+        if (!state.audioContext) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                state.audioContext = new AudioContextClass();
+            }
+        }
+        if (state.audioContext && state.audioContext.state === 'suspended') {
+            state.audioContext.resume();
+        }
+    } catch (e) {
+        console.error("AudioContext initialization failed:", e);
     }
 }
 
 // Generates ringing tones (simulated telephone ring)
 function startRingtoneSynth() {
-    initAudioContext();
-    const ctx = state.audioContext;
-    
-    state.ringGainNode = ctx.createGain();
-    state.ringGainNode.connect(ctx.destination);
-    state.ringGainNode.gain.setValueAtTime(0, ctx.currentTime);
-    
-    // Call sound: dual-frequency ring (440Hz + 480Hz)
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    
-    osc1.frequency.value = 440;
-    osc2.frequency.value = 480;
-    
-    osc1.connect(state.ringGainNode);
-    osc2.connect(state.ringGainNode);
-    
-    osc1.start();
-    osc2.start();
-    
-    state.ringOscillators = [osc1, osc2];
-    
-    // Play ring cycle: 2s sound, 3s silence
-    let time = ctx.currentTime;
-    for (let i = 0; i < 10; i++) {
-        state.ringGainNode.gain.setValueAtTime(0.15, time);
-        state.ringGainNode.gain.setValueAtTime(0, time + 1.8);
-        time += 5; // Repeat interval
+    try {
+        initAudioContext();
+        const ctx = state.audioContext;
+        if (!ctx) return;
+        
+        state.ringGainNode = ctx.createGain();
+        state.ringGainNode.connect(ctx.destination);
+        state.ringGainNode.gain.setValueAtTime(0, ctx.currentTime);
+        
+        // Call sound: dual-frequency ring (440Hz + 480Hz)
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        
+        osc1.frequency.value = 440;
+        osc2.frequency.value = 480;
+        
+        osc1.connect(state.ringGainNode);
+        osc2.connect(state.ringGainNode);
+        
+        osc1.start();
+        osc2.start();
+        
+        state.ringOscillators = [osc1, osc2];
+        
+        // Play ring cycle: 2s sound, 3s silence
+        let time = ctx.currentTime;
+        for (let i = 0; i < 10; i++) {
+            state.ringGainNode.gain.setValueAtTime(0.15, time);
+            state.ringGainNode.gain.setValueAtTime(0, time + 1.8);
+            time += 5; // Repeat interval
+        }
+    } catch (e) {
+        console.error("Ringtone Synthesis error: ", e);
     }
 }
 
@@ -563,14 +575,16 @@ if (recognitionInstance) {
         }
         
         // For no-speech or other transient errors, just silently restart
-        if (state.callStatus === 'connected' && !synth.speaking && !state.activeUtterance) {
+        const isSpeaking = synth && synth.speaking;
+        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance) {
             setTimeout(() => startListening(), 300);
         }
     };
 
     recognitionInstance.onend = () => {
         // Auto-restart mic if call is connected and TTS is not currently playing
-        if (state.callStatus === 'connected' && !synth.speaking && !state.activeUtterance) {
+        const isSpeaking = synth && synth.speaking;
+        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance) {
             setTimeout(() => startListening(), 200);
         }
     };
