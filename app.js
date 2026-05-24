@@ -85,9 +85,9 @@ const DOM = {
 
 // --- Web Speech API Availability Checks ---
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognitionInstance = SpeechRecognition ? new SpeechRecognition() : null;
+let recognitionInstance = null;
 
-if (!recognitionInstance) {
+if (!SpeechRecognition) {
     console.warn("Speech Recognition API is not supported in this browser. Fallback input will be active.");
     DOM.statusEngine.innerText = "Unsupported";
     DOM.statusEngineDot.className = "status-dot red";
@@ -138,11 +138,19 @@ if (synth) {
     }
 }
 
-// --- Initialize Speech Recognition Configuration ---
-if (recognitionInstance) {
-    recognitionInstance.continuous = state.continuousRecognition;
-    recognitionInstance.interimResults = true;
+// --- Initialize Speech Recognition (one-shot mode — prevents Android cumulative repetition) ---
+function initRecognition() {
+    if (!SpeechRecognition) return;
+    recognitionInstance = new SpeechRecognition();
+    recognitionInstance.continuous = false;       // ONE-SHOT: fires once then stops — no cumulative buffer
+    recognitionInstance.interimResults = false;   // Final results only — no interim noise on mobile
     recognitionInstance.maxAlternatives = 1;
+    recognitionInstance.lang = state.sourceLang;
+    bindRecognitionEvents();
+}
+
+if (SpeechRecognition) {
+    initRecognition();
 }
 
 // --- Sound Effects Generator (Web Audio API) ---
@@ -512,39 +520,40 @@ function speakTranslation(text, lang) {
 
 // --- Speech Recognition Triggers ---
 function startListening() {
-    if (!recognitionInstance || !SpeechRecognition) return;
-    
+    if (!SpeechRecognition) return;
+
+    // Create a fresh instance every time — this is the KEY fix.
+    // Re-using the same instance on mobile Chrome causes it to accumulate
+    // all previous sessions' transcripts and repeat them.
+    initRecognition();
+
     // Cancel active TTS output to avoid mic feedback loop
     if (synth && synth.speaking) {
         synth.cancel();
     }
-    
+
     try {
-        recognitionInstance.lang = state.sourceLang;
-        
         recognitionInstance.start();
         state.isListening = true;
-        DOM.isListening = true;
-        
+
         DOM.btnMicTrigger.classList.add('listening');
         setWaveformLabel(`Listening for ${DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text}...`);
-        DOM.waveContainer.classList.add('speaking'); // Pulsate while waiting
+        DOM.waveContainer.classList.add('speaking');
         DOM.statusEngine.innerText = "Listening";
         DOM.statusEngineDot.className = "status-dot yellow";
     } catch (e) {
-        console.log("Speech recognition start issue (likely already running): ", e);
+        console.log("Speech recognition start issue: ", e);
     }
 }
 
 function stopListening(force = false) {
-    if (!recognitionInstance) return;
-    try { recognitionInstance.stop(); } catch(e) {}
-    
-    // Only fully reset state when explicitly forced (e.g. call ended)
+    if (recognitionInstance) {
+        try { recognitionInstance.abort(); } catch(e) {}
+    }
+
     if (force) {
         state.isListening = false;
         clearTimeout(state.speechTimeout);
-        state.speechBuffer = '';
         DOM.btnMicTrigger.classList.remove('listening');
         DOM.waveContainer.classList.remove('speaking');
         setWaveformLabel("Mic Off");
@@ -553,85 +562,28 @@ function stopListening(force = false) {
     }
 }
 
-// Helper to merge speech segments, eliminating cumulative/overlapping duplicates (common on mobile)
-function mergeTranscripts(resultsArray) {
-    let merged = [];
-    const cleanStr = str => str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").replace(/\s+/g, " ").trim();
-    
-    for (let i = 0; i < resultsArray.length; i++) {
-        const current = resultsArray[i].trim();
-        if (!current) continue;
-        
-        if (merged.length === 0) {
-            merged.push(current);
-            continue;
-        }
-        
-        let previous = merged[merged.length - 1];
-        const cleanPrev = cleanStr(previous);
-        const cleanCurr = cleanStr(current);
-        
-        // Scenario 1: Cumulative update (current starts with previous)
-        if (cleanCurr.startsWith(cleanPrev)) {
-            merged[merged.length - 1] = current;
-        } 
-        // Scenario 2: Current is fully contained in previous (interim results duplicate)
-        else if (cleanPrev.includes(cleanCurr)) {
-            // Keep previous
-        }
-        // Scenario 3: Segmented results (normal desktop behavior)
-        else {
-            merged.push(current);
-        }
-    }
-    return merged.join(' ');
-}
+// Bind all events onto the current recognitionInstance (called inside initRecognition)
+function bindRecognitionEvents() {
+    if (!recognitionInstance) return;
 
-// Bind Speech Recognition Events
-if (recognitionInstance) {
-    recognitionInstance.onresult = async (event) => {
-        let finalSegments = [];
-        let interimSegments = [];
-        
-        for (let i = 0; i < event.results.length; ++i) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                finalSegments.push(transcript);
-            } else {
-                interimSegments.push(transcript);
-            }
-        }
-        
-        const finalTranscript = mergeTranscripts(finalSegments);
-        const interimTranscript = mergeTranscripts(interimSegments);
-        
-        // Clear the processing timeout whenever speech is detected
-        clearTimeout(state.speechTimeout);
-        
-        let displayLive = (finalTranscript + " " + interimTranscript).trim();
-        if (displayLive) {
-            setWaveformLabel("Hearing live: " + displayLive);
-            
-            // Start a countdown. If no new speech arrives, process it!
-            state.speechTimeout = setTimeout(() => {
-                const textToTranslate = (finalTranscript || interimTranscript).trim();
-                if (textToTranslate) {
-                    // Lock recognition processing
-                    state.isProcessing = true;
-                    if (recognitionInstance) {
-                        try { recognitionInstance.abort(); } catch(e) {}
-                    }
-                    processSpeechPipeline(textToTranslate);
-                }
-            }, 800); // 800ms silence timeout is a good sweet spot for natural pauses
-        }
+    // ONE-SHOT: because continuous=false, each session fires onresult ONCE
+    // with ONLY what the user said this session. No past speech, no repetition.
+    recognitionInstance.onresult = (event) => {
+        // event.results[0] is the single result from this one-shot session
+        const transcript = event.results[0][0].transcript.trim();
+        if (!transcript) return;
+
+        setWaveformLabel("Heard: " + transcript);
+
+        // Lock & process immediately — no timeout needed in one-shot mode
+        state.isProcessing = true;
+        processSpeechPipeline(transcript);
     };
 
     recognitionInstance.onerror = (event) => {
         console.warn("Speech Recognition error: ", event.error);
-        
+
         if (event.error === 'not-allowed') {
-            // Hard stop — mic permission denied
             setWaveformLabel("Microphone Permission Denied. Please allow mic access.");
             DOM.statusEngine.innerText = "Blocked";
             DOM.statusEngineDot.className = "status-dot red";
@@ -640,8 +592,8 @@ if (recognitionInstance) {
             DOM.waveContainer.classList.remove('speaking');
             return;
         }
-        
-        // For no-speech or other transient errors, just silently restart
+
+        // no-speech or aborted: just restart cleanly if still in call
         const isSpeaking = synth && synth.speaking;
         if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance && !state.isProcessing) {
             setTimeout(() => {
@@ -652,15 +604,18 @@ if (recognitionInstance) {
         }
     };
 
+    // onend fires after each one-shot result. If not processing/speaking, restart.
     recognitionInstance.onend = () => {
-        // Auto-restart mic if call is connected and TTS is not currently playing and we are not processing
+        DOM.btnMicTrigger.classList.remove('listening');
+        DOM.waveContainer.classList.remove('speaking');
+
         const isSpeaking = synth && synth.speaking;
         if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance && !state.isProcessing) {
             setTimeout(() => {
                 if (state.callStatus === 'connected' && !state.activeUtterance && !state.isProcessing) {
                     startListening();
                 }
-            }, 300);
+            }, 400);
         }
     };
 }
