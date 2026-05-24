@@ -666,7 +666,7 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     DOM.conversationEmptyState.classList.add('hidden');
     
     const node = document.createElement('article');
-    node.className = \`dialogue-node \${senderClass}\`;
+    node.className = `dialogue-node ${senderClass}`;
     
     // Get language names for UI display
     const sourceSelect = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex];
@@ -679,29 +679,29 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
-    let originalTextHtml = \`Original (\${sourceLangTag}): <span>\${grammarResult.originalText}</span>\`;
+    let originalTextHtml = `Original (${sourceLangTag}): <span>${grammarResult.originalText}</span>`;
     if (grammarResult.hasMistake) {
-        originalTextHtml = \`
-            <div style="color: #ff6b81; font-size: 0.85em; margin-bottom: 4px;">Original: <del>\${grammarResult.originalText}</del></div>
-            <div style="color: #1dd1a1;">Grammar Corrected: <span>\${grammarResult.correctedText}</span></div>
-        \`;
+        originalTextHtml = `
+            <div style="color: #ff6b81; font-size: 0.85em; margin-bottom: 4px;">Original: <del>${grammarResult.originalText}</del></div>
+            <div style="color: #1dd1a1;">Grammar Corrected: <span>${grammarResult.correctedText}</span></div>
+        `;
     }
     
     // Prioritize translated text as primary, original as smaller secondary sub-text
-    node.innerHTML = \`
+    node.innerHTML = `
         <div class="bubble-meta">
-            <span class="bubble-lang-tag">\${targetLangTag} (Translation)</span>
-            <span class="bubble-time">\${timeStr}</span>
+            <span class="bubble-lang-tag">${targetLangTag} (Translation)</span>
+            <span class="bubble-time">${timeStr}</span>
         </div>
         <div class="bubble-body">
             <div class="translated-text-row">
-                <p class="translated-text">\${translatedText}</p>
+                <p class="translated-text">${translatedText}</p>
                 <button class="btn-speak-text" title="Read Translation Aloud">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 </button>
             </div>
             <div class="translated-divider"></div>
-            <div class="source-text">\${originalTextHtml}</div>
+            <div class="source-text">${originalTextHtml}</div>
         </div>
     `;
     
