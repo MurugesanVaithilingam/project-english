@@ -35,51 +35,53 @@
             </header>
 
             <div class="sidebar-scrollable">
-                <!-- Translation Modes Selector -->
+                <!-- Global Language Selector -->
                 <section class="section-card mode-selector">
-                    <h2>Translation Settings</h2>
-                    <div class="mode-buttons">
-                        <button id="btn-mode-ta-en" class="mode-btn active" title="Speak Tamil, hear English translation">
-                            <span class="flag">🇮🇳</span>
-                            <span class="label">Tamil → English</span>
+                    <h2>Languages</h2>
+                    <div class="language-controls">
+                        <div class="lang-select-group">
+                            <label for="source-lang">You Speak (Mic)</label>
+                            <select id="source-lang" class="lang-select">
+                                <option value="ta-IN" data-lang="ta" selected>Tamil</option>
+                                <option value="en-US" data-lang="en">English</option>
+                                <option value="hi-IN" data-lang="hi">Hindi</option>
+                                <option value="ml-IN" data-lang="ml">Malayalam</option>
+                                <option value="te-IN" data-lang="te">Telugu</option>
+                                <option value="kn-IN" data-lang="kn">Kannada</option>
+                                <option value="es-ES" data-lang="es">Spanish</option>
+                                <option value="fr-FR" data-lang="fr">French</option>
+                                <option value="de-DE" data-lang="de">German</option>
+                                <option value="ja-JP" data-lang="ja">Japanese</option>
+                                <option value="zh-CN" data-lang="zh-CN">Chinese</option>
+                                <option value="ar-SA" data-lang="ar">Arabic</option>
+                                <option value="ru-RU" data-lang="ru">Russian</option>
+                                <option value="pt-BR" data-lang="pt">Portuguese</option>
+                            </select>
+                        </div>
+                        
+                        <button id="btn-swap-langs" class="swap-btn" title="Swap languages">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3-4 4 4 4"/><path d="M20 7H4"/><path d="m8 21 4-4-4-4"/><path d="M4 17h16"/></svg>
                         </button>
-                        <button id="btn-mode-en-ta" class="mode-btn" title="Speak English, hear Tamil translation">
-                            <span class="flag">🇬🇧</span>
-                            <span class="label">English → Tamil</span>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Quick Phrases Section -->
-                <section class="section-card quick-phrases-card">
-                    <h2>Quick Voice Replies</h2>
-                    <p class="section-desc">Tap a phrase to speak it instantly in the translated language.</p>
-                    
-                    <div class="phrases-tabs">
-                        <button id="tab-tamil-phrases" class="tab-btn active">Tamil Phrases</button>
-                        <button id="tab-english-phrases" class="tab-btn">English Phrases</button>
-                    </div>
-
-                    <div class="phrases-list" id="tamil-phrases-list">
-                        <button class="phrase-pill" data-text="வணக்கம், நான் பேசுவது கேட்கிறதா?">வணக்கம் (Hello, can you hear me?)</button>
-                        <button class="phrase-pill" data-text="மன்னிக்கவும், எனக்கு புரியவில்லை.">மன்னிக்கவும் (Sorry, I don't understand)</button>
-                        <button class="phrase-pill" data-text="தயவுசெய்து மீண்டும் கூற முடியுமா?">மீண்டும் கூற முடியுமா? (Can you repeat please?)</button>
-                        <button class="phrase-pill" data-text="நான் நன்றாக இருக்கிறேன், நன்றி.">நன்றாக இருக்கிறேன் (I am doing well, thank you)</button>
-                        <button class="phrase-pill" data-text="உங்களை சந்தித்ததில் மகிழ்ச்சி.">மகிழ்ச்சி (Nice to meet you)</button>
-                        <button class="phrase-pill" data-text="இந்த மொழிபெயர்ப்பு மிகவும் நன்றாக இருக்கிறது.">மொழிபெயர்ப்பு (This translation is great)</button>
-                        <button class="phrase-pill" data-text="தயவுசெய்து ஒரு நிமிடம் காத்திருக்கவும்.">ஒரு நிமிடம் காத்திருக்கவும் (Please wait a minute)</button>
-                        <button class="phrase-pill" data-text="உதவிக்கு மிக்க நன்றி!">நன்றி (Thank you very much for help!)</button>
-                    </div>
-
-                    <div class="phrases-list hidden" id="english-phrases-list">
-                        <button class="phrase-pill" data-text="Hello, how can I help you today?">Hello (வணக்கம், நான் உங்களுக்கு எவ்வாறு உதவலாம்?)</button>
-                        <button class="phrase-pill" data-text="Please hold on for a moment.">Please hold on (தயவுசெய்து ஒரு நிமிடம் காத்திருங்கள்)</button>
-                        <button class="phrase-pill" data-text="Could you please speak a bit slower?">Speak slower (கொஞ்சம் மெதுவாக பேச முடியுமா?)</button>
-                        <button class="phrase-pill" data-text="I can hear you clearly now.">I hear you clearly (இப்போது எனக்கு தெளிவாக கேட்கிறது)</button>
-                        <button class="phrase-pill" data-text="That sounds perfect, thank you.">Sounds perfect (அது சரியாக இருக்கும், நன்றி)</button>
-                        <button class="phrase-pill" data-text="Where are you located?">Where are you? (நீங்கள் எங்கே இருக்கிறீர்கள்?)</button>
-                        <button class="phrase-pill" data-text="Yes, that is correct.">Yes, correct (ஆம், அது சரிதான்)</button>
-                        <button class="phrase-pill" data-text="Let me translate that for you.">Let me translate (நான் அதை மொழிபெயர்க்கிறேன்)</button>
+                        
+                        <div class="lang-select-group">
+                            <label for="target-lang">Translates To</label>
+                            <select id="target-lang" class="lang-select">
+                                <option value="ta-IN" data-lang="ta">Tamil</option>
+                                <option value="en-US" data-lang="en" selected>English</option>
+                                <option value="hi-IN" data-lang="hi">Hindi</option>
+                                <option value="ml-IN" data-lang="ml">Malayalam</option>
+                                <option value="te-IN" data-lang="te">Telugu</option>
+                                <option value="kn-IN" data-lang="kn">Kannada</option>
+                                <option value="es-ES" data-lang="es">Spanish</option>
+                                <option value="fr-FR" data-lang="fr">French</option>
+                                <option value="de-DE" data-lang="de">German</option>
+                                <option value="ja-JP" data-lang="ja">Japanese</option>
+                                <option value="zh-CN" data-lang="zh-CN">Chinese</option>
+                                <option value="ar-SA" data-lang="ar">Arabic</option>
+                                <option value="ru-RU" data-lang="ru">Russian</option>
+                                <option value="pt-BR" data-lang="pt">Portuguese</option>
+                            </select>
+                        </div>
                     </div>
                 </section>
 
@@ -247,15 +249,8 @@
             <div class="modal-body">
                 <!-- Text-to-Speech Output Voice Selection -->
                 <div class="setting-group">
-                    <label for="select-english-voice">English Voice (Output for Tamil Spoken)</label>
-                    <select id="select-english-voice" class="setting-control">
-                        <option value="default">System Default Voice</option>
-                    </select>
-                </div>
-
-                <div class="setting-group">
-                    <label for="select-tamil-voice">Tamil Voice (Output for English Spoken)</label>
-                    <select id="select-tamil-voice" class="setting-control">
+                    <label for="select-playback-voice">Playback Voice (Auto-filters to Target Language)</label>
+                    <select id="select-playback-voice" class="setting-control">
                         <option value="default">System Default Voice</option>
                     </select>
                 </div>

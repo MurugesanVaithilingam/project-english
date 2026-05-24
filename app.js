@@ -6,15 +6,14 @@
 // --- App State Management ---
 const state = {
     callStatus: 'idle', // idle, ringing, connected, ended
-    mode: 'ta-en', // ta-en (Tamil to English), en-ta (English to Tamil)
+    sourceLang: 'ta-IN',
+    targetLang: 'en-US',
     isMuted: false, // Mutes speech synthesis output
     isListening: false,
     continuousRecognition: true,
     autoSpeak: true,
     speechRate: 1.0,
     speechPitch: 1.0,
-    selectedVoiceEn: null,
-    selectedVoiceTa: null,
     callDuration: 0,
     timerInterval: null,
     audioContext: null,
@@ -28,8 +27,9 @@ const state = {
 // --- DOM Reference Selectors ---
 const DOM = {
     appTitle: document.getElementById('app-title'),
-    btnModeTaEn: document.getElementById('btn-mode-ta-en'),
-    btnModeEnTa: document.getElementById('btn-mode-en-ta'),
+    selectSourceLang: document.getElementById('source-lang'),
+    selectTargetLang: document.getElementById('target-lang'),
+    btnSwapLangs: document.getElementById('btn-swap-langs'),
     btnSettingsToggle: document.getElementById('btn-settings-toggle'),
     btnVolumeToggle: document.getElementById('btn-volume-toggle'),
     volumeIcon: document.getElementById('volume-icon'),
@@ -62,12 +62,6 @@ const DOM = {
     fallbackInputForm: document.getElementById('fallback-input-form'),
     fallbackInputField: document.getElementById('fallback-input-field'),
     
-    // Quick Phrases Lists
-    tamilPhrasesList: document.getElementById('tamil-phrases-list'),
-    englishPhrasesList: document.getElementById('english-phrases-list'),
-    tabTamilPhrases: document.getElementById('tab-tamil-phrases'),
-    tabEnglishPhrases: document.getElementById('tab-english-phrases'),
-    
     // Status Indicators
     statusEngine: document.getElementById('status-engine'),
     statusEngineDot: document.getElementById('status-engine-dot'),
@@ -78,8 +72,7 @@ const DOM = {
     settingsModal: document.getElementById('settings-modal'),
     btnCloseSettings: document.getElementById('btn-close-settings'),
     btnSaveSettings: document.getElementById('btn-save-settings'),
-    selectEnglishVoice: document.getElementById('select-english-voice'),
-    selectTamilVoice: document.getElementById('select-tamil-voice'),
+    selectPlaybackVoice: document.getElementById('select-playback-voice'),
     sliderSpeechRate: document.getElementById('slider-speech-rate'),
     lblSpeechRate: document.getElementById('lbl-speech-rate'),
     sliderSpeechPitch: document.getElementById('slider-speech-pitch'),
@@ -113,32 +106,28 @@ function loadVoices() {
     availableVoices = synth.getVoices();
     
     // Populate selectors
-    DOM.selectEnglishVoice.innerHTML = '<option value="default">System Default (English)</option>';
-    DOM.selectTamilVoice.innerHTML = '<option value="default">System Default (Tamil)</option>';
+    DOM.selectPlaybackVoice.innerHTML = '<option value="default">System Default Voice</option>';
     
-    let defaultEnIdx = -1;
-    let defaultTaIdx = -1;
+    const targetLangPrefix = state.targetLang.split('-')[0];
+    let defaultIdx = -1;
     
     availableVoices.forEach((voice, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${voice.name} (${voice.lang})`;
-        
-        if (voice.lang.startsWith('en')) {
-            DOM.selectEnglishVoice.appendChild(option);
-            // Prefer Google US English or Microsoft English
-            if (defaultEnIdx === -1 && (voice.name.includes('Google') || voice.name.includes('Natural') || voice.name.includes('Zira') || voice.name.includes('David'))) {
-                defaultEnIdx = index;
+        if (voice.lang.startsWith(targetLangPrefix)) {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            DOM.selectPlaybackVoice.appendChild(option);
+            
+            // Prefer natural/Google voices
+            if (defaultIdx === -1 && (voice.name.includes('Google') || voice.name.includes('Natural') || voice.name.includes('Premium'))) {
+                defaultIdx = index;
             }
-        } else if (voice.lang.startsWith('ta')) {
-            DOM.selectTamilVoice.appendChild(option);
-            defaultTaIdx = index;
         }
     });
 
-    // Auto-select preferred voices if found
-    if (defaultEnIdx !== -1) DOM.selectEnglishVoice.value = defaultEnIdx;
-    if (defaultTaIdx !== -1) DOM.selectTamilVoice.value = defaultTaIdx;
+    if (defaultIdx !== -1) {
+        DOM.selectPlaybackVoice.value = defaultIdx;
+    }
 }
 
 if (synth) {
@@ -330,17 +319,24 @@ function setCallStatus(newStatus) {
         DOM.callRinging.classList.remove('hidden');
         
         // Dynamic flags in ringing UI based on translation mode
-        if (state.mode === 'ta-en') {
+        const sourceName = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+        const targetName = DOM.selectTargetLang.options[DOM.selectTargetLang.selectedIndex].text;
+        
+        if (state.sourceLang.startsWith('ta')) {
             DOM.ringingFlag.innerText = "🇮🇳";
-            DOM.ringingTitle.innerText = "Calling Tamil Line...";
-            DOM.ringingSubtitle.innerText = "Initializing Speech-to-Speech translator (Tamil ➔ English)...";
+            DOM.ringingTitle.innerText = `Calling Tamil Line...`;
             DOM.callRinging.querySelector('.avatar-large').className = "avatar-large ringing tamil-ring";
-        } else {
+        } else if (state.sourceLang.startsWith('en')) {
             DOM.ringingFlag.innerText = "🇬🇧";
-            DOM.ringingTitle.innerText = "Calling English Line...";
-            DOM.ringingSubtitle.innerText = "Initializing Speech-to-Speech translator (English ➔ Tamil)...";
+            DOM.ringingTitle.innerText = `Calling English Line...`;
+            DOM.callRinging.querySelector('.avatar-large').className = "avatar-large ringing";
+        } else {
+            DOM.ringingFlag.innerText = "🌐";
+            DOM.ringingTitle.innerText = `Connecting ${sourceName} Line...`;
             DOM.callRinging.querySelector('.avatar-large').className = "avatar-large ringing";
         }
+        
+        DOM.ringingSubtitle.innerText = `Initializing Speech-to-Speech translator (${sourceName} ➔ ${targetName})...`;
         
         startRingtoneSynth();
     } 
@@ -351,15 +347,17 @@ function setCallStatus(newStatus) {
         DOM.btnDisconnectCall.disabled = false;
         DOM.btnMicTrigger.classList.add('call-active');
         
-        if (state.mode === 'ta-en') {
+        const sourceName = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+        
+        if (state.sourceLang.startsWith('ta')) {
             DOM.btnMicTrigger.classList.remove('english-mic');
             DOM.avatarRing.className = "avatar-ring active tamil";
-            DOM.micHint.innerText = "Tap to speak Tamil";
         } else {
             DOM.btnMicTrigger.classList.add('english-mic');
             DOM.avatarRing.className = "avatar-ring active";
-            DOM.micHint.innerText = "Tap to speak English";
         }
+        
+        DOM.micHint.innerText = `Tap to speak ${sourceName}`;
         
         stopRingtoneSynth();
         playAudioCue('connect');
@@ -480,23 +478,14 @@ function startListening() {
     }
     
     try {
-        const recognitionLang = state.mode === 'ta-en' ? 'ta-IN' : 'en-US';
-        recognitionInstance.lang = recognitionLang;
+        recognitionInstance.lang = state.sourceLang;
         
         recognitionInstance.start();
         state.isListening = true;
         DOM.isListening = true;
         
         DOM.btnMicTrigger.classList.add('listening');
-        if (state.mode === 'ta-en') {
-            DOM.btnMicTrigger.classList.remove('english-mic');
-            setWaveformLabel("Listening for Tamil speech...");
-            DOM.waveContainer.classList.add('tamil-wave');
-        } else {
-            DOM.btnMicTrigger.classList.add('english-mic');
-            setWaveformLabel("Listening for English speech...");
-            DOM.waveContainer.classList.remove('tamil-wave');
-        }
+        setWaveformLabel(`Listening for ${DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text}...`);
         DOM.waveContainer.classList.add('speaking'); // Pulsate while waiting
         DOM.statusEngine.innerText = "Listening";
         DOM.statusEngineDot.className = "status-dot yellow";
@@ -525,25 +514,23 @@ function stopListening(force = false) {
 // Bind Speech Recognition Events
 if (recognitionInstance) {
     recognitionInstance.onresult = async (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
+        let fullFinal = '';
+        let fullInterim = '';
         
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
+                fullFinal += event.results[i][0].transcript;
             } else {
-                interimTranscript += event.results[i][0].transcript;
+                fullInterim += event.results[i][0].transcript;
             }
         }
         
         // Clear the processing timeout whenever speech is detected
         clearTimeout(state.speechTimeout);
         
-        if (finalTranscript.trim()) {
-            state.speechBuffer += (state.speechBuffer ? ' ' : '') + finalTranscript.trim();
-        }
+        state.speechBuffer = fullFinal.trim();
         
-        let displayLive = (state.speechBuffer + " " + interimTranscript).trim();
+        let displayLive = (state.speechBuffer + " " + fullInterim).trim();
         if (displayLive) {
             setWaveformLabel("Hearing live: " + displayLive);
             
@@ -586,21 +573,59 @@ if (recognitionInstance) {
     };
 }
 
+// --- Grammar Check API (LanguageTool) ---
+async function checkGrammar(text, langCode) {
+    try {
+        const lang = langCode.split('-')[0];
+        const response = await fetch('https://api.languagetool.org/v2/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `text=${encodeURIComponent(text)}&language=${lang}`
+        });
+        const data = await response.json();
+        
+        if (data.matches && data.matches.length > 0) {
+            let corrected = text;
+            let offsetAdjust = 0;
+            
+            data.matches.forEach(match => {
+                if (match.replacements && match.replacements.length > 0) {
+                    const replacement = match.replacements[0].value;
+                    const start = match.offset + offsetAdjust;
+                    const end = start + match.length;
+                    
+                    corrected = corrected.substring(0, start) + replacement + corrected.substring(end);
+                    offsetAdjust += (replacement.length - match.length);
+                }
+            });
+            return { hasMistake: true, correctedText: corrected, originalText: text };
+        }
+    } catch (e) {
+        console.error("Grammar check error: ", e);
+    }
+    return { hasMistake: false, correctedText: text, originalText: text };
+}
+
 // --- Main Text/Speech Processing Pipeline ---
 async function processSpeechPipeline(textInput) {
-    const fromLang = state.mode === 'ta-en' ? 'ta' : 'en';
-    const toLang = state.mode === 'ta-en' ? 'en' : 'ta';
-    const sourceNodeClass = state.mode === 'ta-en' ? 'self' : 'remote';
+    const fromLang = state.sourceLang.split('-')[0];
+    const toLang = state.targetLang.split('-')[0];
+    const sourceNodeClass = 'self';
+    
+    // Check Grammar first
+    setWaveformLabel("Checking grammar...");
+    const grammarResult = await checkGrammar(textInput, state.sourceLang);
+    const finalSourceText = grammarResult.hasMistake ? grammarResult.correctedText : textInput;
     
     // Update visualizer state to translating
     setWaveformLabel("Translating...");
     DOM.statusEngine.innerText = "Translating";
     
     // Run translation API (Free)
-    const translatedResult = await fetchTranslation(textInput, fromLang, toLang);
+    const translatedResult = await fetchTranslation(finalSourceText, fromLang, toLang);
     
     // Output dialogue node HTML
-    appendDialogueBubble(textInput, translatedResult, sourceNodeClass);
+    appendDialogueBubble(grammarResult, translatedResult, sourceNodeClass);
     
     DOM.statusEngine.innerText = "Ready";
     if (state.isListening) {
@@ -619,36 +644,47 @@ async function processSpeechPipeline(textInput) {
 }
 
 // Render dynamic dialog bubbles in the UI
-function appendDialogueBubble(sourceText, translatedText, senderClass) {
+function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     // Hide empty transcript state
     DOM.conversationEmptyState.classList.add('hidden');
     
     const node = document.createElement('article');
-    node.className = `dialogue-node ${senderClass}`;
+    node.className = \`dialogue-node \${senderClass}\`;
     
-    const isTamilSource = (senderClass === 'self');
-    const sourceLangTag = isTamilSource ? 'Tamil 🇮🇳' : 'English 🇬🇧';
-    const targetLangTag = isTamilSource ? 'English 🇬🇧' : 'Tamil 🇮🇳';
+    // Get language names for UI display
+    const sourceSelect = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex];
+    const targetSelect = DOM.selectTargetLang.options[DOM.selectTargetLang.selectedIndex];
+    
+    const targetLangTag = targetSelect.text;
+    const sourceLangTag = sourceSelect.text;
     
     // Get timestamp
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
+    let originalTextHtml = \`Original (\${sourceLangTag}): <span>\${grammarResult.originalText}</span>\`;
+    if (grammarResult.hasMistake) {
+        originalTextHtml = \`
+            <div style="color: #ff6b81; font-size: 0.85em; margin-bottom: 4px;">Original: <del>\${grammarResult.originalText}</del></div>
+            <div style="color: #1dd1a1;">Grammar Corrected: <span>\${grammarResult.correctedText}</span></div>
+        \`;
+    }
+    
     // Prioritize translated text as primary, original as smaller secondary sub-text
-    node.innerHTML = `
+    node.innerHTML = \`
         <div class="bubble-meta">
-            <span class="bubble-lang-tag">${targetLangTag} (Translation)</span>
-            <span class="bubble-time">${timeStr}</span>
+            <span class="bubble-lang-tag">\${targetLangTag} (Translation)</span>
+            <span class="bubble-time">\${timeStr}</span>
         </div>
         <div class="bubble-body">
             <div class="translated-text-row">
-                <p class="translated-text">${translatedText}</p>
+                <p class="translated-text">\${translatedText}</p>
                 <button class="btn-speak-text" title="Read Translation Aloud">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 </button>
             </div>
             <div class="translated-divider"></div>
-            <p class="source-text">Original: <span>${sourceText}</span></p>
+            <div class="source-text">\${originalTextHtml}</div>
         </div>
     `;
     
@@ -722,22 +758,24 @@ DOM.btnMicTrigger.addEventListener('click', () => {
     }
 });
 
-// Translation direction mode selectors
-DOM.btnModeTaEn.addEventListener('click', () => {
-    playAudioCue('click');
-    if (state.mode === 'ta-en') return;
-    
-    state.mode = 'ta-en';
-    DOM.btnModeTaEn.classList.add('active');
-    DOM.btnModeEnTa.classList.remove('active');
-    
-    // Modify fallback placeholder
-    DOM.fallbackInputField.placeholder = "Type text in Tamil to translate to English...";
+// Language selectors & Swap button
+DOM.selectSourceLang.addEventListener('change', (e) => {
+    state.sourceLang = e.target.value;
+    const langLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+    DOM.fallbackInputField.placeholder = `Type text in ${langLabel} to translate...`;
     
     if (state.callStatus === 'connected') {
-        DOM.btnMicTrigger.classList.remove('english-mic');
-        DOM.avatarRing.className = "avatar-ring active tamil";
-        DOM.micHint.innerText = "Tap to speak Tamil";
+        const sourceLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+        DOM.micHint.innerText = `Tap to speak ${sourceLabel}`;
+        
+        if (state.sourceLang.startsWith('ta')) {
+            DOM.btnMicTrigger.classList.remove('english-mic');
+            DOM.avatarRing.className = "avatar-ring active tamil";
+        } else {
+            DOM.btnMicTrigger.classList.add('english-mic');
+            DOM.avatarRing.className = "avatar-ring active";
+        }
+        
         if (state.isListening) {
             stopListening();
             startListening();
@@ -745,21 +783,37 @@ DOM.btnModeTaEn.addEventListener('click', () => {
     }
 });
 
-DOM.btnModeEnTa.addEventListener('click', () => {
+DOM.selectTargetLang.addEventListener('change', (e) => {
+    state.targetLang = e.target.value;
+    loadVoices();
+});
+
+DOM.btnSwapLangs.addEventListener('click', () => {
     playAudioCue('click');
-    if (state.mode === 'en-ta') return;
+    const temp = state.sourceLang;
+    state.sourceLang = state.targetLang;
+    state.targetLang = temp;
     
-    state.mode = 'en-ta';
-    DOM.btnModeEnTa.classList.add('active');
-    DOM.btnModeTaEn.classList.remove('active');
+    DOM.selectSourceLang.value = state.sourceLang;
+    DOM.selectTargetLang.value = state.targetLang;
     
-    // Modify fallback placeholder
-    DOM.fallbackInputField.placeholder = "Type text in English to translate to Tamil...";
+    const langLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+    DOM.fallbackInputField.placeholder = `Type text in ${langLabel} to translate...`;
+    
+    loadVoices();
     
     if (state.callStatus === 'connected') {
-        DOM.btnMicTrigger.classList.add('english-mic');
-        DOM.avatarRing.className = "avatar-ring active";
-        DOM.micHint.innerText = "Tap to speak English";
+        const sourceLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
+        DOM.micHint.innerText = `Tap to speak ${sourceLabel}`;
+        
+        if (state.sourceLang.startsWith('ta')) {
+            DOM.btnMicTrigger.classList.remove('english-mic');
+            DOM.avatarRing.className = "avatar-ring active tamil";
+        } else {
+            DOM.btnMicTrigger.classList.add('english-mic');
+            DOM.avatarRing.className = "avatar-ring active";
+        }
+        
         if (state.isListening) {
             stopListening();
             startListening();
@@ -849,53 +903,4 @@ DOM.fallbackInputForm.addEventListener('submit', (e) => {
     DOM.fallbackInputField.value = '';
     
     processSpeechPipeline(textVal);
-});
-
-// --- Quick Voice Phrases handlers ---
-
-// Tab selectors (Tamil/English phrases)
-DOM.tabTamilPhrases.addEventListener('click', () => {
-    playAudioCue('click');
-    DOM.tabTamilPhrases.classList.add('active');
-    DOM.tabEnglishPhrases.classList.remove('active');
-    DOM.tamilPhrasesList.classList.remove('hidden');
-    DOM.englishPhrasesList.classList.add('hidden');
-});
-
-DOM.tabEnglishPhrases.addEventListener('click', () => {
-    playAudioCue('click');
-    DOM.tabEnglishPhrases.classList.add('active');
-    DOM.tabTamilPhrases.classList.remove('active');
-    DOM.englishPhrasesList.classList.remove('hidden');
-    DOM.tamilPhrasesList.classList.add('hidden');
-});
-
-// Quick Phrases click trigger
-document.querySelectorAll('.phrase-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-        playAudioCue('click');
-        const textVal = pill.getAttribute('data-text');
-        
-        // Override state mode matching the tab containing the clicked phrase
-        const isTamilPhrase = pill.parentElement.id === 'tamil-phrases-list';
-        
-        if (isTamilPhrase) {
-            state.mode = 'ta-en';
-            DOM.btnModeTaEn.classList.add('active');
-            DOM.btnModeEnTa.classList.remove('active');
-            DOM.fallbackInputField.placeholder = "Type text in Tamil to translate to English...";
-        } else {
-            state.mode = 'en-ta';
-            DOM.btnModeEnTa.classList.add('active');
-            DOM.btnModeTaEn.classList.remove('active');
-            DOM.fallbackInputField.placeholder = "Type text in English to translate to Tamil...";
-        }
-        
-        // If not in a call, notify user and auto-start it for a realistic feel!
-        if (state.callStatus !== 'connected') {
-            setCallStatus('connected');
-        }
-        
-        processSpeechPipeline(textVal);
-    });
 });
