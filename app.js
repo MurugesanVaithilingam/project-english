@@ -422,13 +422,13 @@ function speakTranslation(text, lang) {
     
     // Pick the selected voice based on target language
     if (lang === 'en') {
-        if (DOM.selectEnglishVoice.value !== 'default' && availableVoices[DOM.selectEnglishVoice.value]) {
-            utterance.voice = availableVoices[DOM.selectEnglishVoice.value];
+        if (DOM.selectPlaybackVoice && DOM.selectPlaybackVoice.value !== 'default' && availableVoices[DOM.selectPlaybackVoice.value]) {
+            utterance.voice = availableVoices[DOM.selectPlaybackVoice.value];
         }
         utterance.lang = 'en-US';
     } else if (lang === 'ta') {
-        if (DOM.selectTamilVoice.value !== 'default' && availableVoices[DOM.selectTamilVoice.value]) {
-            utterance.voice = availableVoices[DOM.selectTamilVoice.value];
+        if (DOM.selectPlaybackVoice && DOM.selectPlaybackVoice.value !== 'default' && availableVoices[DOM.selectPlaybackVoice.value]) {
+            utterance.voice = availableVoices[DOM.selectPlaybackVoice.value];
         }
         utterance.lang = 'ta-IN';
     }
@@ -695,7 +695,7 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     node.querySelector('.btn-speak-text').addEventListener('click', (e) => {
         e.stopPropagation();
         playAudioCue('click');
-        const targetLang = isTamilSource ? 'en' : 'ta';
+        const targetLang = state.targetLang.split('-')[0];
         speakTranslation(translatedText, targetLang);
     });
     
