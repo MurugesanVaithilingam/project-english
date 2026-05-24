@@ -1315,22 +1315,17 @@ body {
     }
     
     .sidebar-scrollable {
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
+        display: block;
         padding: 8px 12px;
-        gap: 8px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .sidebar-scrollable::-webkit-scrollbar {
-        display: none;
+        overflow: visible;
     }
     
-    /* Mode selector becomes compact horizontal buttons */
     .section-card.mode-selector {
-        padding: 8px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        width: 100%;
         min-width: auto;
         flex-shrink: 0;
     }
@@ -1339,55 +1334,44 @@ body {
         display: none;
     }
 
-    .mode-buttons {
-        flex-direction: row;
-        gap: 6px;
+    .language-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 0;
+        width: 100%;
     }
 
-    .mode-btn {
-        padding: 8px 12px;
-        font-size: 0.78rem;
-        white-space: nowrap;
+    .lang-select-group {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
     }
 
-    .mode-btn .flag {
-        font-size: 1rem;
+    .lang-select-group label {
+        font-size: 0.65rem;
+        letter-spacing: 0.3px;
     }
 
-    /* Quick phrases become horizontally scrollable pills */
-    .section-card.quick-phrases-card {
-        padding: 8px;
-        min-width: auto;
-        flex-shrink: 0;
+    .lang-select {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--glass-border);
     }
 
-    .section-card h2, .section-desc, .phrases-tabs {
-        display: none;
-    }
-    
-    .phrases-list {
-        flex-direction: row;
-        max-height: none;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 6px;
-        padding-right: 0;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
+    .swap-btn {
+        margin-top: 16px;
+        width: 34px;
+        height: 34px;
+        gap: 0;
+        background: rgba(255, 255, 255, 0.04);
     }
 
-    .phrases-list::-webkit-scrollbar {
-        display: none;
-    }
-    
-    .phrase-pill {
-        white-space: nowrap;
-        width: auto;
-        min-width: max-content;
-        padding: 6px 12px;
-        font-size: 0.75rem;
-    }
-    
     .status-panel {
         display: none;
     }
