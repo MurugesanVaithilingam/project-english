@@ -514,27 +514,30 @@ function stopListening(force = false) {
 // Bind Speech Recognition Events
 if (recognitionInstance) {
     recognitionInstance.onresult = async (event) => {
-        let fullFinal = '';
-        let fullInterim = '';
+        let newFinal = '';
+        let newInterim = '';
         
-        for (let i = 0; i < event.results.length; ++i) {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
-                fullFinal += event.results[i][0].transcript;
+                newFinal += event.results[i][0].transcript;
             } else {
-                fullInterim += event.results[i][0].transcript;
+                newInterim += event.results[i][0].transcript;
             }
         }
         
         // Clear the processing timeout whenever speech is detected
         clearTimeout(state.speechTimeout);
         
-        state.speechBuffer = fullFinal.trim();
+        if (newFinal) {
+            state.speechBuffer += ' ' + newFinal.trim();
+            state.speechBuffer = state.speechBuffer.trim();
+        }
         
-        let displayLive = (state.speechBuffer + " " + fullInterim).trim();
+        let displayLive = (state.speechBuffer + " " + newInterim).trim();
         if (displayLive) {
             setWaveformLabel("Hearing live: " + displayLive);
             
-            // Start a 0.75-second countdown. If no new speech arrives, process the buffer!
+            // Start a countdown. If no new speech arrives, process the buffer!
             state.speechTimeout = setTimeout(() => {
                 if (state.speechBuffer.trim()) {
                     const textToTranslate = state.speechBuffer.trim();
