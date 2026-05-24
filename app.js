@@ -553,21 +553,57 @@ function stopListening(force = false) {
     }
 }
 
+// Helper to merge speech segments, eliminating cumulative/overlapping duplicates (common on mobile)
+function mergeTranscripts(resultsArray) {
+    let merged = [];
+    const cleanStr = str => str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").replace(/\s+/g, " ").trim();
+    
+    for (let i = 0; i < resultsArray.length; i++) {
+        const current = resultsArray[i].trim();
+        if (!current) continue;
+        
+        if (merged.length === 0) {
+            merged.push(current);
+            continue;
+        }
+        
+        let previous = merged[merged.length - 1];
+        const cleanPrev = cleanStr(previous);
+        const cleanCurr = cleanStr(current);
+        
+        // Scenario 1: Cumulative update (current starts with previous)
+        if (cleanCurr.startsWith(cleanPrev)) {
+            merged[merged.length - 1] = current;
+        } 
+        // Scenario 2: Current is fully contained in previous (interim results duplicate)
+        else if (cleanPrev.includes(cleanCurr)) {
+            // Keep previous
+        }
+        // Scenario 3: Segmented results (normal desktop behavior)
+        else {
+            merged.push(current);
+        }
+    }
+    return merged.join(' ');
+}
+
 // Bind Speech Recognition Events
 if (recognitionInstance) {
     recognitionInstance.onresult = async (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        let finalSegments = [];
+        let interimSegments = [];
         
         for (let i = 0; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript + ' ';
+                finalSegments.push(transcript);
             } else {
-                interimTranscript += event.results[i][0].transcript;
+                interimSegments.push(transcript);
             }
         }
         
-        finalTranscript = finalTranscript.trim();
+        const finalTranscript = mergeTranscripts(finalSegments);
+        const interimTranscript = mergeTranscripts(interimSegments);
         
         // Clear the processing timeout whenever speech is detected
         clearTimeout(state.speechTimeout);
