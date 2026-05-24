@@ -37,49 +37,58 @@
             <div class="sidebar-scrollable">
                 <!-- Global Language Selector -->
                 <section class="section-card mode-selector">
-                    <h2>Languages</h2>
-                    <div class="language-controls">
-                        <div class="lang-select-group">
-                            <label for="source-lang">You Speak (Mic)</label>
-                            <select id="source-lang" class="lang-select">
-                                <option value="ta-IN" data-lang="ta" selected>Tamil</option>
-                                <option value="en-US" data-lang="en">English</option>
-                                <option value="hi-IN" data-lang="hi">Hindi</option>
-                                <option value="ml-IN" data-lang="ml">Malayalam</option>
-                                <option value="te-IN" data-lang="te">Telugu</option>
-                                <option value="kn-IN" data-lang="kn">Kannada</option>
-                                <option value="es-ES" data-lang="es">Spanish</option>
-                                <option value="fr-FR" data-lang="fr">French</option>
-                                <option value="de-DE" data-lang="de">German</option>
-                                <option value="ja-JP" data-lang="ja">Japanese</option>
-                                <option value="zh-CN" data-lang="zh-CN">Chinese</option>
-                                <option value="ar-SA" data-lang="ar">Arabic</option>
-                                <option value="ru-RU" data-lang="ru">Russian</option>
-                                <option value="pt-BR" data-lang="pt">Portuguese</option>
+                    <div class="lang-header">
+                        <svg class="lang-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6 6-6"/><circle cx="12" cy="12" r="10"/></svg>
+                        <span>Translation Language</span>
+                    </div>
+                    <div class="lang-card-row">
+                        <div class="lang-card source-card">
+                            <div class="lang-card-label">
+                                <span class="lang-dot dot-cyan"></span>
+                                🎙️ You Speak
+                            </div>
+                            <select id="source-lang" class="lang-select source-select">
+                                <option value="ta-IN" data-lang="ta" selected>🇮🇳 Tamil</option>
+                                <option value="en-US" data-lang="en">🇺🇸 English</option>
+                                <option value="hi-IN" data-lang="hi">🇮🇳 Hindi</option>
+                                <option value="ml-IN" data-lang="ml">🇮🇳 Malayalam</option>
+                                <option value="te-IN" data-lang="te">🇮🇳 Telugu</option>
+                                <option value="kn-IN" data-lang="kn">🇮🇳 Kannada</option>
+                                <option value="es-ES" data-lang="es">🇪🇸 Spanish</option>
+                                <option value="fr-FR" data-lang="fr">🇫🇷 French</option>
+                                <option value="de-DE" data-lang="de">🇩🇪 German</option>
+                                <option value="ja-JP" data-lang="ja">🇯🇵 Japanese</option>
+                                <option value="zh-CN" data-lang="zh-CN">🇨🇳 Chinese</option>
+                                <option value="ar-SA" data-lang="ar">🇸🇦 Arabic</option>
+                                <option value="ru-RU" data-lang="ru">🇷🇺 Russian</option>
+                                <option value="pt-BR" data-lang="pt">🇧🇷 Portuguese</option>
                             </select>
                         </div>
-                        
+
                         <button id="btn-swap-langs" class="swap-btn" title="Swap languages">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3-4 4 4 4"/><path d="M20 7H4"/><path d="m8 21 4-4-4-4"/><path d="M4 17h16"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3-4 4 4 4"/><path d="M20 7H4"/><path d="m8 21 4-4-4-4"/><path d="M4 17h16"/></svg>
                         </button>
-                        
-                        <div class="lang-select-group">
-                            <label for="target-lang">Translates To</label>
-                            <select id="target-lang" class="lang-select">
-                                <option value="ta-IN" data-lang="ta">Tamil</option>
-                                <option value="en-US" data-lang="en" selected>English</option>
-                                <option value="hi-IN" data-lang="hi">Hindi</option>
-                                <option value="ml-IN" data-lang="ml">Malayalam</option>
-                                <option value="te-IN" data-lang="te">Telugu</option>
-                                <option value="kn-IN" data-lang="kn">Kannada</option>
-                                <option value="es-ES" data-lang="es">Spanish</option>
-                                <option value="fr-FR" data-lang="fr">French</option>
-                                <option value="de-DE" data-lang="de">German</option>
-                                <option value="ja-JP" data-lang="ja">Japanese</option>
-                                <option value="zh-CN" data-lang="zh-CN">Chinese</option>
-                                <option value="ar-SA" data-lang="ar">Arabic</option>
-                                <option value="ru-RU" data-lang="ru">Russian</option>
-                                <option value="pt-BR" data-lang="pt">Portuguese</option>
+
+                        <div class="lang-card target-card">
+                            <div class="lang-card-label">
+                                <span class="lang-dot dot-pink"></span>
+                                🔊 Translates To
+                            </div>
+                            <select id="target-lang" class="lang-select target-select">
+                                <option value="ta-IN" data-lang="ta">🇮🇳 Tamil</option>
+                                <option value="en-US" data-lang="en" selected>🇺🇸 English</option>
+                                <option value="hi-IN" data-lang="hi">🇮🇳 Hindi</option>
+                                <option value="ml-IN" data-lang="ml">🇮🇳 Malayalam</option>
+                                <option value="te-IN" data-lang="te">🇮🇳 Telugu</option>
+                                <option value="kn-IN" data-lang="kn">🇮🇳 Kannada</option>
+                                <option value="es-ES" data-lang="es">🇪🇸 Spanish</option>
+                                <option value="fr-FR" data-lang="fr">🇫🇷 French</option>
+                                <option value="de-DE" data-lang="de">🇩🇪 German</option>
+                                <option value="ja-JP" data-lang="ja">🇯🇵 Japanese</option>
+                                <option value="zh-CN" data-lang="zh-CN">🇨🇳 Chinese</option>
+                                <option value="ar-SA" data-lang="ar">🇸🇦 Arabic</option>
+                                <option value="ru-RU" data-lang="ru">🇷🇺 Russian</option>
+                                <option value="pt-BR" data-lang="pt">🇧🇷 Portuguese</option>
                             </select>
                         </div>
                     </div>
