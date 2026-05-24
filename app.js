@@ -10,6 +10,7 @@ const state = {
     targetLang: 'en-US',
     isMuted: false, // Mutes speech synthesis output
     isListening: false,
+    isProcessing: false, // Prevents overlapping mic input/feedback loops
     continuousRecognition: true,
     autoSpeak: true,
     speechRate: 1.0,
@@ -325,6 +326,7 @@ function setCallStatus(newStatus) {
         stopTimer();
         stopRingtoneSynth();
         stopListening(true);
+        state.isProcessing = false;
     } 
     else if (newStatus === 'ringing') {
         DOM.callOverlay.classList.add('hidden');
@@ -358,6 +360,7 @@ function setCallStatus(newStatus) {
         DOM.btnMicTrigger.disabled = false;
         DOM.btnDisconnectCall.disabled = false;
         DOM.btnMicTrigger.classList.add('call-active');
+        state.isProcessing = false;
         
         const sourceName = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
         
@@ -415,7 +418,20 @@ async function fetchTranslation(text, fromLang, toLang) {
 
 // --- Text-To-Speech Synthesis ---
 function speakTranslation(text, lang) {
-    if (!synth || state.isMuted) return;
+    // Lock the mic processing to prevent overlap
+    state.isProcessing = true;
+
+    if (!synth || state.isMuted) {
+        state.isProcessing = false;
+        if (state.callStatus === 'connected') {
+            setTimeout(() => {
+                if (state.callStatus === 'connected' && !state.isProcessing) {
+                    startListening();
+                }
+            }, 300);
+        }
+        return;
+    }
     
     // Stop ongoing speech
     synth.cancel();
@@ -462,11 +478,16 @@ function speakTranslation(text, lang) {
         DOM.waveContainer.classList.remove('speaking');
         DOM.statusTts.innerText = "Active";
         state.activeUtterance = null;
+        state.isProcessing = false; // Release lock
         
         // Always restart mic after TTS finishes if call is still connected
         if (state.callStatus === 'connected') {
             state.isListening = true;
-            setTimeout(() => startListening(), 200);
+            setTimeout(() => {
+                if (state.callStatus === 'connected' && !state.isProcessing) {
+                    startListening();
+                }
+            }, 600); // 600ms delay to clear any hardware audio tail/echo on mobile
         }
     };
 
@@ -475,6 +496,15 @@ function speakTranslation(text, lang) {
         DOM.waveContainer.classList.remove('speaking');
         DOM.statusTts.innerText = "Active";
         state.activeUtterance = null;
+        state.isProcessing = false; // Release lock
+        
+        if (state.callStatus === 'connected') {
+            setTimeout(() => {
+                if (state.callStatus === 'connected' && !state.isProcessing) {
+                    startListening();
+                }
+            }, 300);
+        }
     };
     
     synth.speak(utterance);
@@ -526,37 +556,38 @@ function stopListening(force = false) {
 // Bind Speech Recognition Events
 if (recognitionInstance) {
     recognitionInstance.onresult = async (event) => {
-        let newFinal = '';
-        let newInterim = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
         
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
-                newFinal += event.results[i][0].transcript;
+                finalTranscript += event.results[i][0].transcript + ' ';
             } else {
-                newInterim += event.results[i][0].transcript;
+                interimTranscript += event.results[i][0].transcript;
             }
         }
+        
+        finalTranscript = finalTranscript.trim();
         
         // Clear the processing timeout whenever speech is detected
         clearTimeout(state.speechTimeout);
         
-        if (newFinal) {
-            state.speechBuffer += ' ' + newFinal.trim();
-            state.speechBuffer = state.speechBuffer.trim();
-        }
-        
-        let displayLive = (state.speechBuffer + " " + newInterim).trim();
+        let displayLive = (finalTranscript + " " + interimTranscript).trim();
         if (displayLive) {
             setWaveformLabel("Hearing live: " + displayLive);
             
-            // Start a countdown. If no new speech arrives, process the buffer!
+            // Start a countdown. If no new speech arrives, process it!
             state.speechTimeout = setTimeout(() => {
-                if (state.speechBuffer.trim()) {
-                    const textToTranslate = state.speechBuffer.trim();
-                    state.speechBuffer = ''; // Clear buffer immediately
+                const textToTranslate = (finalTranscript || interimTranscript).trim();
+                if (textToTranslate) {
+                    // Lock recognition processing
+                    state.isProcessing = true;
+                    if (recognitionInstance) {
+                        try { recognitionInstance.abort(); } catch(e) {}
+                    }
                     processSpeechPipeline(textToTranslate);
                 }
-            }, 750);
+            }, 800); // 800ms silence timeout is a good sweet spot for natural pauses
         }
     };
 
@@ -576,28 +607,56 @@ if (recognitionInstance) {
         
         // For no-speech or other transient errors, just silently restart
         const isSpeaking = synth && synth.speaking;
-        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance) {
-            setTimeout(() => startListening(), 300);
+        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance && !state.isProcessing) {
+            setTimeout(() => {
+                if (state.callStatus === 'connected' && !state.activeUtterance && !state.isProcessing) {
+                    startListening();
+                }
+            }, 300);
         }
     };
 
     recognitionInstance.onend = () => {
-        // Auto-restart mic if call is connected and TTS is not currently playing
+        // Auto-restart mic if call is connected and TTS is not currently playing and we are not processing
         const isSpeaking = synth && synth.speaking;
-        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance) {
-            setTimeout(() => startListening(), 200);
+        if (state.callStatus === 'connected' && !isSpeaking && !state.activeUtterance && !state.isProcessing) {
+            setTimeout(() => {
+                if (state.callStatus === 'connected' && !state.activeUtterance && !state.isProcessing) {
+                    startListening();
+                }
+            }, 300);
         }
     };
 }
 
 // --- Grammar Check API (LanguageTool) ---
+const LT_SUPPORTED_LANGUAGES = {
+    'en-US': 'en-US',
+    'en-GB': 'en-GB',
+    'de-DE': 'de-DE',
+    'es-ES': 'es',
+    'fr-FR': 'fr',
+    'ja-JP': 'ja',
+    'zh-CN': 'zh-CN',
+    'ru-RU': 'ru',
+    'pt-BR': 'pt-BR',
+    'ar-SA': 'ar',
+    'hi-IN': 'hi',
+    'ta-IN': 'ta'
+};
+
 async function checkGrammar(text, langCode) {
+    const ltLang = LT_SUPPORTED_LANGUAGES[langCode];
+    if (!ltLang) {
+        // Skip grammar check silently if not supported by LanguageTool
+        return { hasMistake: false, correctedText: text, originalText: text };
+    }
+    
     try {
-        const lang = langCode.split('-')[0];
         const response = await fetch('https://api.languagetool.org/v2/check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `text=${encodeURIComponent(text)}&language=${lang}`
+            body: `text=${encodeURIComponent(text)}&language=${ltLang}`
         });
         const data = await response.json();
         
@@ -629,32 +688,42 @@ async function processSpeechPipeline(textInput) {
     const toLang = state.targetLang.split('-')[0];
     const sourceNodeClass = 'self';
     
-    // Check Grammar first
-    setWaveformLabel("Checking grammar...");
-    const grammarResult = await checkGrammar(textInput, state.sourceLang);
-    const finalSourceText = grammarResult.hasMistake ? grammarResult.correctedText : textInput;
-    
-    // Update visualizer state to translating
-    setWaveformLabel("Translating...");
-    DOM.statusEngine.innerText = "Translating";
-    
-    // Run translation API (Free)
-    const translatedResult = await fetchTranslation(finalSourceText, fromLang, toLang);
-    
-    // Output dialogue node HTML
-    appendDialogueBubble(grammarResult, translatedResult, sourceNodeClass);
-    
-    DOM.statusEngine.innerText = "Ready";
-    if (state.isListening) {
-        DOM.statusEngineDot.className = "status-dot yellow";
-    }
-    
-    // Run Voice Output (Speech Synthesis)
-    if (state.autoSpeak) {
-        speakTranslation(translatedResult, toLang);
-    } else {
-        setWaveformLabel(state.isListening ? "Listening for voice..." : "Idle");
-        if (state.continuousRecognition && state.isListening) {
+    try {
+        // Check Grammar first
+        setWaveformLabel("Checking grammar...");
+        const grammarResult = await checkGrammar(textInput, state.sourceLang);
+        const finalSourceText = grammarResult.hasMistake ? grammarResult.correctedText : textInput;
+        
+        // Update visualizer state to translating
+        setWaveformLabel("Translating...");
+        DOM.statusEngine.innerText = "Translating";
+        
+        // Run translation API (Free)
+        const translatedResult = await fetchTranslation(finalSourceText, fromLang, toLang);
+        
+        // Output dialogue node HTML
+        appendDialogueBubble(grammarResult, translatedResult, sourceNodeClass);
+        
+        DOM.statusEngine.innerText = "Ready";
+        if (state.isListening) {
+            DOM.statusEngineDot.className = "status-dot yellow";
+        }
+        
+        // Run Voice Output (Speech Synthesis)
+        if (state.autoSpeak) {
+            speakTranslation(translatedResult, toLang);
+        } else {
+            state.isProcessing = false; // Release lock
+            setWaveformLabel("Call connected. Press Microphone to talk!");
+            if (state.callStatus === 'connected') {
+                startListening();
+            }
+        }
+    } catch (error) {
+        console.error("Speech pipeline error: ", error);
+        state.isProcessing = false; // Release lock
+        setWaveformLabel("Error occurred. Ready.");
+        if (state.callStatus === 'connected') {
             startListening();
         }
     }
@@ -682,8 +751,14 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
     let originalTextHtml = `Original (${sourceLangTag}): <span>${grammarResult.originalText}</span>`;
     if (grammarResult.hasMistake) {
         originalTextHtml = `
-            <div style="color: #ff6b81; font-size: 0.85em; margin-bottom: 4px;">Original: <del>${grammarResult.originalText}</del></div>
-            <div style="color: #1dd1a1;">Grammar Corrected: <span>${grammarResult.correctedText}</span></div>
+            <div class="grammar-original-container">
+                <span class="grammar-badge-red">Original</span>
+                <del>${grammarResult.originalText}</del>
+            </div>
+            <div class="grammar-corrected-container">
+                <span class="grammar-badge-green">Corrected</span>
+                <span>${grammarResult.correctedText}</span>
+            </div>
         `;
     }
     
@@ -721,6 +796,95 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
 
 function setWaveformLabel(text) {
     DOM.waveformLabel.innerText = text;
+}
+
+// --- Quick Call Assist Phrases Data ---
+const QUICK_PHRASES = {
+    'ta-IN': [
+        { text: 'வணக்கம், நலம் தானா?', label: 'Hello' },
+        { text: 'தயவுசெய்து மெதுவாகப் பேசுங்கள்.', label: 'Speak Slowly' },
+        { text: 'நான் ஒரு குரல் மொழிபெயர்ப்பாளரைப் பயன்படுத்துகிறேன்.', label: 'Using Translator' },
+        { text: 'ஒரு நிமிடம் காத்திருங்கள்.', label: 'Wait a moment' },
+        { text: 'நன்றி.', label: 'Thank you' }
+    ],
+    'en-US': [
+        { text: 'Hello, how are you?', label: 'Hello' },
+        { text: 'Please speak a bit slowly.', label: 'Speak Slowly' },
+        { text: 'I am using a real-time voice translator.', label: 'Using Translator' },
+        { text: 'Please wait for a moment.', label: 'Wait a moment' },
+        { text: 'Thank you very much.', label: 'Thank you' }
+    ],
+    'es-ES': [
+        { text: 'Hola, ¿cómo estás?', label: 'Hello' },
+        { text: 'Por favor, habla más despacio.', label: 'Speak Slowly' },
+        { text: 'Estoy usando un traductor de voz.', label: 'Using Translator' },
+        { text: 'Un momento, por favor.', label: 'Wait a moment' },
+        { text: 'Muchas gracias.', label: 'Thank you' }
+    ],
+    'fr-FR': [
+        { text: 'Bonjour, comment allez-vous ?', label: 'Hello' },
+        { text: 'Parlez plus lentement, s’il vous plaît.', label: 'Speak Slowly' },
+        { text: 'J’utilise un traducteur vocal.', label: 'Using Translator' },
+        { text: 'Un instant, s’il vous plaît.', label: 'Wait a moment' },
+        { text: 'Merci beaucoup.', label: 'Thank you' }
+    ],
+    'de-DE': [
+        { text: 'Hallo, wie geht es dir?', label: 'Hello' },
+        { text: 'Sprechen Sie bitte etwas langsamer.', label: 'Speak Slowly' },
+        { text: 'Ich verwende einen Sprachübersetzer.', label: 'Using Translator' },
+        { text: 'Einen Moment, bitte.', label: 'Wait a moment' },
+        { text: 'Vielen Dank.', label: 'Thank you' }
+    ],
+    'hi-IN': [
+        { text: 'नमस्ते, आप कैसे हैं?', label: 'Hello' },
+        { text: 'कृपया थोड़ा धीरे बोलें।', label: 'Speak Slowly' },
+        { text: 'मैं एक वॉयस ट्रांसलेटर का उपयोग कर रहा हूँ।', label: 'Using Translator' },
+        { text: 'कृपया एक क्षण प्रतीक्षा करें।', label: 'Wait a moment' },
+        { text: 'बहुत-बहुत धन्यवाद।', label: 'Thank you' }
+    ]
+};
+
+function loadQuickPhrases() {
+    const container = document.getElementById('quick-phrases-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Add layout class to color badges based on language direction
+    if (state.sourceLang.startsWith('ta')) {
+        container.classList.add('tamil-active-qp');
+    } else {
+        container.classList.remove('tamil-active-qp');
+    }
+    
+    // Get phrases for current source language, fallback to English
+    const phrases = QUICK_PHRASES[state.sourceLang] || QUICK_PHRASES['en-US'];
+    
+    phrases.forEach(phrase => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-phrase-btn';
+        btn.title = phrase.text;
+        btn.innerHTML = `
+            <span class="qp-label">${phrase.label}</span>
+            <span class="qp-text">${phrase.text}</span>
+        `;
+        btn.addEventListener('click', () => {
+            if (state.callStatus !== 'connected') {
+                alert("Please start the call first to use Assist Phrases.");
+                return;
+            }
+            playAudioCue('click');
+            
+            // Set lock and abort active mic to avoid capturing clicks/echo
+            state.isProcessing = true;
+            if (recognitionInstance) {
+                try { recognitionInstance.abort(); } catch(e) {}
+            }
+            
+            processSpeechPipeline(phrase.text);
+        });
+        container.appendChild(btn);
+    });
 }
 
 // --- Bind Interactive Click Events ---
@@ -762,6 +926,7 @@ DOM.btnMicTrigger.addEventListener('click', () => {
     // During an active call: just restart mic (never kill the loop)
     if (state.callStatus === 'connected') {
         if (synth && synth.speaking) synth.cancel(); // stop TTS if speaking
+        state.isProcessing = false; // Reset lock if they force-clicked the mic button!
         try { recognitionInstance.stop(); } catch(e) {}
         setTimeout(() => startListening(), 200);
         return;
@@ -780,6 +945,9 @@ DOM.selectSourceLang.addEventListener('change', (e) => {
     state.sourceLang = e.target.value;
     const langLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
     DOM.fallbackInputField.placeholder = `Type text in ${langLabel} to translate...`;
+    
+    // Refresh Quick Phrases
+    loadQuickPhrases();
     
     if (state.callStatus === 'connected') {
         const sourceLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
@@ -816,6 +984,9 @@ DOM.btnSwapLangs.addEventListener('click', () => {
     
     const langLabel = DOM.selectSourceLang.options[DOM.selectSourceLang.selectedIndex].text;
     DOM.fallbackInputField.placeholder = `Type text in ${langLabel} to translate...`;
+    
+    // Refresh Quick Phrases
+    loadQuickPhrases();
     
     loadVoices();
     
@@ -919,5 +1090,12 @@ DOM.fallbackInputForm.addEventListener('submit', (e) => {
     playAudioCue('click');
     DOM.fallbackInputField.value = '';
     
+    state.isProcessing = true; // Lock mic
+    if (recognitionInstance) {
+        try { recognitionInstance.abort(); } catch(e) {}
+    }
     processSpeechPipeline(textVal);
 });
+
+// Initialize Call Assist Phrases on load
+loadQuickPhrases();

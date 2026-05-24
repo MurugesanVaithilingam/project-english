@@ -2113,3 +2113,112 @@ body {
         height: 90px;
     }
 }
+
+/* --- Call Assist Phrases Styles --- */
+.quick-phrases-panel {
+    background: linear-gradient(145deg, rgba(8, 4, 20, 0.6) 0%, rgba(14, 9, 32, 0.7) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.quick-phrases-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.quick-phrase-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text-main);
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: var(--transition-smooth);
+    width: 100%;
+    outline: none;
+}
+
+.quick-phrase-btn:hover {
+    background: rgba(0, 242, 254, 0.05);
+    border-color: rgba(0, 242, 254, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 242, 254, 0.15);
+    transform: translateY(-1px);
+}
+
+.quick-phrase-btn:active {
+    transform: translateY(1px);
+}
+
+.qp-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--accent-en-primary);
+}
+
+/* If source is Tamil, color it pink */
+.tamil-active-qp .qp-label {
+    color: var(--accent-ta-primary);
+}
+
+.qp-text {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.quick-phrase-btn:hover .qp-text {
+    color: var(--text-main);
+}
+
+/* --- Grammar Correction UI classes --- */
+.grammar-original-container {
+    color: #ff6b81;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.grammar-corrected-container {
+    color: #1dd1a1;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.grammar-badge-red {
+    background: rgba(255, 107, 129, 0.15);
+    color: #ff6b81;
+    border: 1px solid rgba(255, 107, 129, 0.3);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.grammar-badge-green {
+    background: rgba(29, 209, 161, 0.15);
+    color: #1dd1a1;
+    border: 1px solid rgba(29, 209, 161, 0.3);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
