@@ -259,26 +259,35 @@ body {
 
 .lang-select {
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px 14px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--glass-border);
-    background: rgba(18, 11, 34, 0.4);
-    color: var(--text-main);
+    border: 1px solid rgba(0, 242, 254, 0.25);
+    background: linear-gradient(135deg, rgba(24, 15, 48, 0.7) 0%, rgba(12, 6, 26, 0.8) 100%);
+    color: #00f2fe;
     font-size: 0.95rem;
     font-family: inherit;
+    font-weight: 500;
     cursor: pointer;
     outline: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.lang-select:hover {
+    border-color: rgba(0, 242, 254, 0.7);
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    color: #fff;
 }
 
 .lang-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+    border-color: #f857a6;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(248, 87, 166, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .lang-select option {
-    background: var(--bg-deep);
-    color: var(--text-light);
+    background: #0c061a;
+    color: #fff;
 }
 
 .swap-btn {
@@ -286,21 +295,24 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: var(--glass-highlight);
-    border: 1px solid var(--glass-border);
-    color: var(--text-main);
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(248, 87, 166, 0.1) 100%);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    color: #00f2fe;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .swap-btn:hover {
-    background: rgba(108, 92, 231, 0.2);
-    color: var(--primary);
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.25) 0%, rgba(248, 87, 166, 0.25) 100%);
+    border-color: #f857a6;
+    color: #f857a6;
     transform: rotate(180deg);
+    box-shadow: 0 0 15px rgba(248, 87, 166, 0.4);
 }
 
 .swap-btn svg {
@@ -1058,21 +1070,27 @@ body {
 
 .input-form input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--glass-border);
+    background: linear-gradient(135deg, rgba(24, 15, 48, 0.6) 0%, rgba(12, 6, 26, 0.8) 100%);
+    border: 1px solid rgba(0, 242, 254, 0.25);
     padding: 12px 18px;
     border-radius: var(--radius-sm);
-    color: var(--text-main);
-    font-family: var(--font-tamil);
+    color: #fff;
+    font-family: inherit;
     font-size: 0.95rem;
     outline: none;
-    transition: var(--transition-smooth);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.input-form input:hover {
+    border-color: rgba(0, 242, 254, 0.6);
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 .input-form input:focus {
-    border-color: var(--accent-en-primary);
-    background: rgba(0, 0, 0, 0.4);
-    box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+    border-color: #f857a6;
+    background: rgba(12, 6, 26, 0.9);
+    box-shadow: 0 0 20px rgba(248, 87, 166, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .btn-send {
