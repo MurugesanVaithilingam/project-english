@@ -1434,10 +1434,16 @@ body {
     .sidebar-panel {
         width: 100%;
         height: auto;
-        max-height: none;
+        max-height: 250px; /* Keep it compact */
         border-right: none;
         border-bottom: 1px solid var(--glass-border);
         flex-shrink: 0;
+        overflow-y: auto;
+    }
+    
+    /* Hide the huge phrases panel on mobile to save space */
+    .quick-phrases-panel {
+        display: none !important;
     }
     
     .logo-area {
@@ -2221,4 +2227,45 @@ body {
     border-radius: 3px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* --- Suggested Replies UI --- */
+.suggested-replies-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 0 12px;
+    margin-top: 6px;
+    scrollbar-width: none;
+}
+
+.suggested-replies-container::-webkit-scrollbar {
+    display: none;
+}
+
+.reply-chip {
+    background: rgba(0, 242, 254, 0.1);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    color: #00f2fe;
+    font-family: var(--font-outfit);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 242, 254, 0.15);
+}
+
+.reply-chip:hover {
+    background: rgba(0, 242, 254, 0.2);
+    border-color: rgba(0, 242, 254, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 242, 254, 0.3);
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.reply-chip:active {
+    transform: translateY(1px);
 }

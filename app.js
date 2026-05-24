@@ -1,5 +1,5 @@
 /**
- * VaniLink - Tamil-English Call Translator Controller
+ * Kutty Brw - Tamil-English Call Translator Controller
  * 100% Free, Client-side Speech Recognition, Translation, and Synthesis.
  */
 
@@ -633,7 +633,10 @@ const LT_SUPPORTED_LANGUAGES = {
     'pt-BR': 'pt-BR',
     'ar-SA': 'ar',
     'hi-IN': 'hi',
-    'ta-IN': 'ta'
+    'ta-IN': 'ta',
+    'ml-IN': 'ml', // Attempt Malayalam if supported
+    'te-IN': 'te', // Attempt Telugu if supported
+    'kn-IN': 'kn'  // Attempt Kannada if supported
 };
 
 async function checkGrammar(text, langCode) {
@@ -753,6 +756,18 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
         `;
     }
     
+    // Suggested Answers logic (client-side intent matching)
+    const suggestions = generateSuggestedReplies(translatedText);
+    let suggestionsHtml = '';
+    
+    if (suggestions.length > 0) {
+        suggestionsHtml = `
+            <div class="suggested-replies-container">
+                ${suggestions.map(reply => `<button class="reply-chip">${reply}</button>`).join('')}
+            </div>
+        `;
+    }
+    
     // Prioritize translated text as primary, original as smaller secondary sub-text
     node.innerHTML = `
         <div class="bubble-meta">
@@ -766,6 +781,7 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 </button>
             </div>
+            ${suggestionsHtml}
             <div class="translated-divider"></div>
             <div class="source-text">${originalTextHtml}</div>
         </div>
@@ -777,6 +793,20 @@ function appendDialogueBubble(grammarResult, translatedText, senderClass) {
         playAudioCue('click');
         const targetLang = state.targetLang.split('-')[0];
         speakTranslation(translatedText, targetLang);
+    });
+
+    // Listen to reply chips
+    const chips = node.querySelectorAll('.reply-chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playAudioCue('click');
+            // If user clicked a reply, we set it as if they spoke it in their source lang
+            // The replies are generated in English, so we treat it as textInput
+            // Actually, we must process it directly
+            state.isProcessing = true;
+            processSpeechPipeline(chip.innerText);
+        });
     });
     
     DOM.transcriptContainer.appendChild(node);
@@ -999,6 +1029,36 @@ DOM.btnSwapLangs.addEventListener('click', () => {
         }
     }
 });
+
+// Auto-start audio context on first interaction
+document.body.addEventListener('click', () => {
+    if (!state.audioContext) {
+        initAudioContext();
+    }
+}, { once: true });
+
+// --- Suggested Replies Engine ---
+function generateSuggestedReplies(text) {
+    const lowerText = text.toLowerCase();
+    let suggestions = [];
+
+    // Simple Intent Matching
+    if (lowerText.match(/\b(hi|hello|hey|greetings|how are you|how do you do)\b/)) {
+        suggestions = ["Hello! I'm doing well.", "Hi, how can I help?", "I'm good, thank you!"];
+    } else if (lowerText.match(/\b(thank you|thanks|appreciate it)\b/)) {
+        suggestions = ["You're welcome!", "No problem at all.", "Glad I could help."];
+    } else if (lowerText.match(/\b(bye|goodbye|see you|catch you later)\b/)) {
+        suggestions = ["Goodbye! Have a great day.", "See you later!", "Take care."];
+    } else if (lowerText.match(/\b(yes|no|maybe|are you sure)\b/)) {
+        suggestions = ["Yes, absolutely.", "No, not right now.", "Let me check."];
+    } else if (lowerText.match(/\b(help|support|assistance)\b/)) {
+        suggestions = ["How can I assist you?", "Please tell me more.", "I'm here to help."];
+    } else if (lowerText.match(/\b(name|who are you)\b/)) {
+        suggestions = ["I'm calling via Kutty Brw.", "My name is on the screen.", "I'm your contact."];
+    }
+
+    return suggestions;
+}
 
 // Mute Synthesized Voices
 DOM.btnVolumeToggle.addEventListener('click', () => {
